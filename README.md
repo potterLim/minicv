@@ -1,3 +1,9 @@
 # miniCV
 
-Core computer vision algorithms implemented from scratch in C++.
+miniCV는 핵심 컴퓨터 비전 알고리즘을 C++로 직접 구현하는 이미지 처리 라이브러리입니다.
+
+이미지 컨테이너, 파일 입출력, 픽셀 연산, 필터링, 엣지 검출, 모폴로지, 객체 영역 분석 같은 기반 기능을 직접 구현하며 이미지 처리의 내부 흐름을 이해하는 것을 목표로 합니다.
+
+## 로드맵
+
+- [첫 반년 개발 로드맵](first_half_roadmap.md)

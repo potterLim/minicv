@@ -138,3 +138,8 @@ _deps/
 .env
 .env.*
 !.env.example
+
+# -------------------------
+# Local project notes
+# -------------------------
+.local/
