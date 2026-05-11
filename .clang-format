@@ -1,0 +1,145 @@
+# ============================================================
+# .clang-format
+#
+# Formatting rules for miniCV C++ source files.
+#
+# Style intent:
+# - Allman braces
+# - Visual Studio-style tabs and 4-column indentation
+# - Type-bound pointer and reference alignment
+# - Regrouped include blocks
+# - One constructor initializer per line
+# ============================================================
+
+Language: Cpp
+BasedOnStyle: Microsoft
+Standard: c++20
+
+# =========================
+# Indentation / tabs
+# =========================
+UseTab: Always
+IndentWidth: 4
+TabWidth: 4
+ContinuationIndentWidth: 4
+ConstructorInitializerIndentWidth: 4
+AccessModifierOffset: -4
+NamespaceIndentation: All
+IndentCaseLabels: false
+IndentCaseBlocks: false
+IndentGotoLabels: true
+IndentPPDirectives: None
+
+# =========================
+# Line length / wrapping
+# =========================
+ColumnLimit: 0
+BreakBeforeBinaryOperators: None
+BreakBeforeTernaryOperators: true
+BreakStringLiterals: false
+BreakAfterReturnType: None
+AllowAllParametersOfDeclarationOnNextLine: false
+BinPackArguments: false
+BinPackParameters: OnePerLine
+
+# =========================
+# Braces
+# =========================
+BreakBeforeBraces: Allman
+
+# Keep short blocks and statements expanded.
+AllowShortBlocksOnASingleLine: Never
+AllowShortFunctionsOnASingleLine: None
+AllowShortIfStatementsOnASingleLine: Never
+AllowShortLoopsOnASingleLine: false
+AllowShortCaseLabelsOnASingleLine: false
+AllowShortEnumsOnASingleLine: false
+AllowShortLambdasOnASingleLine: None
+
+# =========================
+# Pointers / references
+# =========================
+PointerAlignment: Left
+ReferenceAlignment: Left
+DerivePointerAlignment: false
+SpaceAroundPointerQualifiers: Default
+
+# =========================
+# Constructor initializer lists
+#
+# Preferred form:
+#   : mA(a)
+#   , mB(b)
+# =========================
+PackConstructorInitializers: Never
+BreakConstructorInitializers: BeforeComma
+
+# =========================
+# Include ordering
+#
+# System/external headers with <> come before project headers with "".
+# =========================
+SortIncludes:
+  Enabled: true
+  IgnoreCase: false
+IncludeBlocks: Regroup
+IncludeIsMainRegex: '($^)'
+IncludeCategories:
+  - Regex: '^<.*>$'
+    Priority: 1
+  - Regex: '^".*"$'
+    Priority: 2
+
+# =========================
+# Alignment
+#
+# Avoid aggressive vertical alignment to keep diffs small.
+# =========================
+AlignAfterOpenBracket: false
+AlignArrayOfStructures: None
+AlignConsecutiveAssignments: None
+AlignConsecutiveBitFields: None
+AlignConsecutiveDeclarations: None
+AlignConsecutiveMacros: None
+AlignEscapedNewlines: DontAlign
+AlignOperands: DontAlign
+AlignTrailingComments:
+  Kind: Never
+  OverEmptyLines: 0
+
+# =========================
+# Spacing
+# =========================
+SpaceBeforeParens: ControlStatements
+SpaceBeforeAssignmentOperators: true
+SpaceBeforeCpp11BracedList: false
+SpaceBeforeCtorInitializerColon: true
+SpaceBeforeInheritanceColon: true
+SpaceBeforeRangeBasedForLoopColon: true
+SpaceBeforeSquareBrackets: false
+SpacesBeforeTrailingComments: 1
+SpacesInAngles: Never
+SpacesInContainerLiterals: false
+SpacesInParens: Never
+SpacesInSquareBrackets: false
+Cpp11BracedListStyle: false
+
+# =========================
+# Other C++ formatting
+# =========================
+FixNamespaceComments: false
+SortUsingDeclarations: true
+CompactNamespaces: false
+EmptyLineBeforeAccessModifier: Never
+MaxEmptyLinesToKeep: 1
+KeepEmptyLines:
+  AtStartOfBlock: false
+ReflowComments: Never
+
+# =========================
+# Notes
+#
+# clang-format only controls layout. Semantic style rules such as naming,
+# const-correctness, override/final usage, and one-variable-per-declaration
+# should be checked with clang-tidy and code review.
+# ============================================================
