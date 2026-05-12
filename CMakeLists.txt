@@ -6,16 +6,21 @@ project(miniCV
     LANGUAGES CXX
 )
 
-add_library(miniCV INTERFACE)
+add_library(miniCV STATIC
+    src/Mat.cpp
+    include/minicv/Mat.h
+    include/minicv/EImageType.h
+    include/minicv/ERgbChannel.h
+)
 add_library(miniCV::miniCV ALIAS miniCV)
 
 target_compile_features(miniCV
-    INTERFACE
+    PUBLIC
         cxx_std_20
 )
 
 target_include_directories(miniCV
-    INTERFACE
+    PUBLIC
         $<BUILD_INTERFACE:${PROJECT_SOURCE_DIR}/include>
         $<INSTALL_INTERFACE:include>
 )
@@ -33,12 +38,16 @@ function(minicv_enable_warnings target_name)
     endif()
 endfunction()
 
+minicv_enable_warnings(miniCV)
+
 if(MINICV_BUILD_TESTS)
     include(CTest)
 
     if(BUILD_TESTING)
         add_executable(minicv_tests
             tests/main.cpp
+            tests/mat_test.cpp
+            tests/mat_test.h
         )
 
         target_link_libraries(minicv_tests
