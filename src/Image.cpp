@@ -1,4 +1,6 @@
 #include <cassert>
+#include <cstddef>
+#include <limits>
 
 #include "minicv/Image.h"
 
@@ -19,6 +21,35 @@ namespace minicv
 				return 0;
 			}
 		}
+
+		int CalculateBytesPerRow(const int width, const int channelCount)
+		{
+			assert(width >= 0 && "width must not be negative.");
+			assert(channelCount > 0 && "channel count must be positive.");
+
+			const std::size_t widthSize = static_cast<std::size_t>(width);
+			const std::size_t channelCountSize = static_cast<std::size_t>(channelCount);
+			const std::size_t maxBytesPerRow = static_cast<std::size_t>(std::numeric_limits<int>::max());
+			const bool bytesPerRowFitsInInt = widthSize <= maxBytesPerRow / channelCountSize;
+
+			assert(bytesPerRowFitsInInt && "bytes per row exceeds int range.");
+
+			return static_cast<int>(widthSize * channelCountSize);
+		}
+
+		std::size_t CalculateByteCount(const int height, const int bytesPerRow)
+		{
+			assert(height >= 0 && "height must not be negative.");
+			assert(bytesPerRow >= 0 && "bytes per row must not be negative.");
+
+			const std::size_t heightSize = static_cast<std::size_t>(height);
+			const std::size_t bytesPerRowSize = static_cast<std::size_t>(bytesPerRow);
+			const bool byteCountDoesNotOverflow = bytesPerRowSize == 0 || heightSize <= std::numeric_limits<std::size_t>::max() / bytesPerRowSize;
+
+			assert(byteCountDoesNotOverflow && "image byte count overflow.");
+
+			return heightSize * bytesPerRowSize;
+		}
 	}
 
 	Image::Image()
@@ -35,13 +66,13 @@ namespace minicv
 		: mWidth(width)
 		, mHeight(height)
 		, mChannelCount(GetChannelCountFromImageType(imageType))
-		, mBytesPerRow(mWidth * mChannelCount)
+		, mBytesPerRow(CalculateBytesPerRow(mWidth, mChannelCount))
 		, mImageType(imageType)
 	{
-		assert(mWidth >= 0 && "width must not be negative.");
-		assert(mHeight >= 0 && "height must not be negative.");
+		const std::size_t byteCount = CalculateByteCount(mHeight, mBytesPerRow);
+		assert(byteCount <= mPixels.max_size() && "image byte count exceeds maximum vector size.");
 
-		mPixels.resize(static_cast<std::size_t>(mHeight) * static_cast<std::size_t>(mBytesPerRow));
+		mPixels.resize(byteCount);
 	}
 
 	bool Image::IsEmpty() const

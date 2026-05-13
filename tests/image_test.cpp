@@ -1,6 +1,7 @@
 #include <cassert>
 #include <cstddef>
 #include <cstdint>
+#include <limits>
 
 #include "image_test.h"
 #include "minicv/Image.h"
@@ -72,6 +73,27 @@ namespace
 		assert(zeroHeight.GetByteCount() == 0);
 	}
 
+	void TestLargeEmptyImages()
+	{
+		const int maxRgbWidth = std::numeric_limits<int>::max() / 3;
+		const minicv::Image wideImage(maxRgbWidth, 0, minicv::eImageType::UInt8RGB);
+
+		assert(wideImage.IsEmpty());
+		assert(wideImage.GetWidth() == maxRgbWidth);
+		assert(wideImage.GetHeight() == 0);
+		assert(wideImage.GetChannelCount() == 3);
+		assert(wideImage.GetBytesPerRow() == maxRgbWidth * 3);
+		assert(wideImage.GetByteCount() == 0);
+
+		const minicv::Image tallImage(0, std::numeric_limits<int>::max());
+
+		assert(tallImage.IsEmpty());
+		assert(tallImage.GetWidth() == 0);
+		assert(tallImage.GetHeight() == std::numeric_limits<int>::max());
+		assert(tallImage.GetBytesPerRow() == 0);
+		assert(tallImage.GetByteCount() == 0);
+	}
+
 	void TestGrayscalePixelAccess()
 	{
 		minicv::Image image(3, 2);
@@ -114,6 +136,7 @@ void RunImageTests()
 	TestGrayscaleConstructor();
 	TestRgbConstructor();
 	TestEmptyImages();
+	TestLargeEmptyImages();
 	TestGrayscalePixelAccess();
 	TestRgbPixelAccess();
 }
