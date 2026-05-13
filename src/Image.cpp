@@ -1,6 +1,6 @@
 #include <cassert>
 
-#include "minicv/Mat.h"
+#include "minicv/Image.h"
 
 namespace minicv
 {
@@ -21,17 +21,17 @@ namespace minicv
 		}
 	}
 
-	Mat::Mat()
-		: Mat(0, 0, eImageType::UInt8Grayscale)
+	Image::Image()
+		: Image(0, 0, eImageType::UInt8Grayscale)
 	{
 	}
 
-	Mat::Mat(const int width, const int height)
-		: Mat(width, height, eImageType::UInt8Grayscale)
+	Image::Image(const int width, const int height)
+		: Image(width, height, eImageType::UInt8Grayscale)
 	{
 	}
 
-	Mat::Mat(const int width, const int height, const eImageType imageType)
+	Image::Image(const int width, const int height, const eImageType imageType)
 		: mWidth(width)
 		, mHeight(height)
 		, mChannelCount(GetChannelCountFromImageType(imageType))
@@ -44,57 +44,57 @@ namespace minicv
 		mPixels.resize(static_cast<std::size_t>(mHeight) * static_cast<std::size_t>(mBytesPerRow));
 	}
 
-	bool Mat::IsEmpty() const
+	bool Image::IsEmpty() const
 	{
 		return mPixels.empty();
 	}
 
-	int Mat::GetWidth() const
+	int Image::GetWidth() const
 	{
 		return mWidth;
 	}
 
-	int Mat::GetHeight() const
+	int Image::GetHeight() const
 	{
 		return mHeight;
 	}
 
-	int Mat::GetChannelCount() const
+	int Image::GetChannelCount() const
 	{
 		return mChannelCount;
 	}
 
-	int Mat::GetBytesPerRow() const
+	int Image::GetBytesPerRow() const
 	{
 		return mBytesPerRow;
 	}
 
-	eImageType Mat::GetImageType() const
+	eImageType Image::GetImageType() const
 	{
 		return mImageType;
 	}
 
-	std::size_t Mat::GetPixelCount() const
+	std::size_t Image::GetPixelCount() const
 	{
 		return static_cast<std::size_t>(mWidth) * static_cast<std::size_t>(mHeight);
 	}
 
-	std::size_t Mat::GetByteCount() const
+	std::size_t Image::GetByteCount() const
 	{
 		return static_cast<std::size_t>(mHeight) * static_cast<std::size_t>(mBytesPerRow);
 	}
 
-	std::uint8_t* Mat::GetPixelData()
+	std::uint8_t* Image::GetPixelData()
 	{
 		return mPixels.data();
 	}
 
-	const std::uint8_t* Mat::GetPixelData() const
+	const std::uint8_t* Image::GetPixelData() const
 	{
 		return mPixels.data();
 	}
 
-	std::uint8_t& Mat::GetGrayscalePixel(const int x, const int y)
+	std::uint8_t& Image::GetGrayscalePixel(const int x, const int y)
 	{
 		assert(mImageType == eImageType::UInt8Grayscale && "image type must be UInt8Grayscale.");
 		assert(x >= 0 && x < mWidth && "x is out of range.");
@@ -105,7 +105,7 @@ namespace minicv
 		return mPixels[index];
 	}
 
-	const std::uint8_t& Mat::GetGrayscalePixel(const int x, const int y) const
+	const std::uint8_t& Image::GetGrayscalePixel(const int x, const int y) const
 	{
 		assert(mImageType == eImageType::UInt8Grayscale && "image type must be UInt8Grayscale.");
 		assert(x >= 0 && x < mWidth && "x is out of range.");
@@ -116,7 +116,7 @@ namespace minicv
 		return mPixels[index];
 	}
 
-	std::uint8_t& Mat::GetRgbPixel(const int x, const int y, const eRgbChannel rgbChannel)
+	std::uint8_t& Image::GetRgbPixel(const int x, const int y, const eRgbChannel rgbChannel)
 	{
 		assert(mImageType == eImageType::UInt8RGB && "image type must be UInt8RGB.");
 		assert(x >= 0 && x < mWidth && "x is out of range.");
@@ -130,7 +130,7 @@ namespace minicv
 		return mPixels[index];
 	}
 
-	const std::uint8_t& Mat::GetRgbPixel(const int x, const int y, const eRgbChannel rgbChannel) const
+	const std::uint8_t& Image::GetRgbPixel(const int x, const int y, const eRgbChannel rgbChannel) const
 	{
 		assert(mImageType == eImageType::UInt8RGB && "image type must be UInt8RGB.");
 		assert(x >= 0 && x < mWidth && "x is out of range.");

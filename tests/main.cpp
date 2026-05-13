@@ -1,8 +1,8 @@
-#include "mat_test.h"
+#include "image_test.h"
 
 int main()
 {
-	RunMatTests();
+	RunImageTests();
 
 	return 0;
 }

@@ -2,14 +2,14 @@
 #include <cstddef>
 #include <cstdint>
 
-#include "mat_test.h"
-#include "minicv/Mat.h"
+#include "image_test.h"
+#include "minicv/Image.h"
 
 namespace
 {
 	void TestDefaultConstructor()
 	{
-		const minicv::Mat image;
+		const minicv::Image image;
 
 		assert(image.IsEmpty());
 		assert(image.GetWidth() == 0);
@@ -23,7 +23,7 @@ namespace
 
 	void TestGrayscaleConstructor()
 	{
-		minicv::Mat image(3, 2);
+		minicv::Image image(3, 2);
 
 		assert(!image.IsEmpty());
 		assert(image.GetWidth() == 3);
@@ -45,7 +45,7 @@ namespace
 
 	void TestRgbConstructor()
 	{
-		const minicv::Mat image(2, 3, minicv::eImageType::UInt8RGB);
+		const minicv::Image image(2, 3, minicv::eImageType::UInt8RGB);
 
 		assert(!image.IsEmpty());
 		assert(image.GetWidth() == 2);
@@ -60,8 +60,8 @@ namespace
 
 	void TestEmptyImages()
 	{
-		const minicv::Mat zeroWidth(0, 5);
-		const minicv::Mat zeroHeight(5, 0);
+		const minicv::Image zeroWidth(0, 5);
+		const minicv::Image zeroHeight(5, 0);
 
 		assert(zeroWidth.IsEmpty());
 		assert(zeroWidth.GetPixelCount() == 0);
@@ -74,20 +74,20 @@ namespace
 
 	void TestGrayscalePixelAccess()
 	{
-		minicv::Mat image(3, 2);
+		minicv::Image image(3, 2);
 
 		image.GetGrayscalePixel(2, 1) = 255;
 
 		assert(image.GetGrayscalePixel(2, 1) == 255);
 		assert(image.GetPixelData()[5] == 255);
 
-		const minicv::Mat& constImage = image;
+		const minicv::Image& constImage = image;
 		assert(constImage.GetGrayscalePixel(2, 1) == 255);
 	}
 
 	void TestRgbPixelAccess()
 	{
-		minicv::Mat image(2, 2, minicv::eImageType::UInt8RGB);
+		minicv::Image image(2, 2, minicv::eImageType::UInt8RGB);
 
 		image.GetRgbPixel(1, 1, minicv::eRgbChannel::Red) = 10;
 		image.GetRgbPixel(1, 1, minicv::eRgbChannel::Green) = 20;
@@ -101,14 +101,14 @@ namespace
 		assert(image.GetPixelData()[10] == 20);
 		assert(image.GetPixelData()[11] == 30);
 
-		const minicv::Mat& constImage = image;
+		const minicv::Image& constImage = image;
 		assert(constImage.GetRgbPixel(1, 1, minicv::eRgbChannel::Red) == 10);
 		assert(constImage.GetRgbPixel(1, 1, minicv::eRgbChannel::Green) == 20);
 		assert(constImage.GetRgbPixel(1, 1, minicv::eRgbChannel::Blue) == 30);
 	}
 }
 
-void RunMatTests()
+void RunImageTests()
 {
 	TestDefaultConstructor();
 	TestGrayscaleConstructor();

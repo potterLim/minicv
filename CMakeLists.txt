@@ -7,8 +7,8 @@ project(miniCV
 )
 
 add_library(miniCV STATIC
-    src/Mat.cpp
-    include/minicv/Mat.h
+    src/Image.cpp
+    include/minicv/Image.h
     include/minicv/EImageType.h
     include/minicv/ERgbChannel.h
 )
@@ -46,8 +46,8 @@ if(MINICV_BUILD_TESTS)
     if(BUILD_TESTING)
         add_executable(minicv_tests
             tests/main.cpp
-            tests/mat_test.cpp
-            tests/mat_test.h
+            tests/image_test.cpp
+            tests/image_test.h
         )
 
         target_link_libraries(minicv_tests

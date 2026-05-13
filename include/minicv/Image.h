@@ -9,12 +9,12 @@
 
 namespace minicv
 {
-	class Mat
+	class Image
 	{
 	public:
-		Mat();
-		Mat(const int width, const int height);
-		Mat(const int width, const int height, const eImageType imageType);
+		Image();
+		Image(const int width, const int height);
+		Image(const int width, const int height, const eImageType imageType);
 
 		[[nodiscard]] bool IsEmpty() const;
 
