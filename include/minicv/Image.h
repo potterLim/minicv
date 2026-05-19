@@ -14,7 +14,7 @@ namespace minicv
 	public:
 		Image();
 		Image(const int width, const int height);
-		Image(const int width, const int height, const eImageType imageType);
+		Image(const int width, const int height, const EImageType imageType);
 
 		[[nodiscard]] bool IsEmpty() const;
 
@@ -22,7 +22,7 @@ namespace minicv
 		[[nodiscard]] int GetHeight() const;
 		[[nodiscard]] int GetChannelCount() const;
 		[[nodiscard]] int GetBytesPerRow() const;
-		[[nodiscard]] eImageType GetImageType() const;
+		[[nodiscard]] EImageType GetImageType() const;
 
 		[[nodiscard]] std::size_t GetPixelCount() const;
 		[[nodiscard]] std::size_t GetByteCount() const;
@@ -33,14 +33,15 @@ namespace minicv
 		[[nodiscard]] std::uint8_t& GetGrayscalePixel(const int x, const int y);
 		[[nodiscard]] const std::uint8_t& GetGrayscalePixel(const int x, const int y) const;
 
-		[[nodiscard]] std::uint8_t& GetRgbPixel(const int x, const int y, const eRgbChannel rgbChannel);
-		[[nodiscard]] const std::uint8_t& GetRgbPixel(const int x, const int y, const eRgbChannel rgbChannel) const;
+		[[nodiscard]] std::uint8_t& GetRgbPixel(const int x, const int y, const ERgbChannel rgbChannel);
+		[[nodiscard]] const std::uint8_t& GetRgbPixel(const int x, const int y, const ERgbChannel rgbChannel) const;
+
 	private:
 		int mWidth;
 		int mHeight;
 		int mChannelCount;
 		int mBytesPerRow;
-		eImageType mImageType;
+		EImageType mImageType;
 		std::vector<std::uint8_t> mPixels;
 	};
 }

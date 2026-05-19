@@ -1,4 +1,4 @@
-#include "image_test.h"
+#include "ImageTest.h"
 
 int main()
 {

@@ -130,7 +130,7 @@ Cpp11BracedListStyle: false
 FixNamespaceComments: false
 SortUsingDeclarations: true
 CompactNamespaces: false
-EmptyLineBeforeAccessModifier: Never
+EmptyLineBeforeAccessModifier: LogicalBlock
 MaxEmptyLinesToKeep: 1
 KeepEmptyLines:
   AtStartOfBlock: false

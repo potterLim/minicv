@@ -8,13 +8,13 @@ namespace minicv
 {
 	namespace
 	{
-		int GetChannelCountFromImageType(const eImageType imageType)
+		int GetChannelCountFromImageType(const EImageType imageType)
 		{
 			switch (imageType)
 			{
-			case eImageType::UInt8Grayscale:
+			case EImageType::UInt8Grayscale:
 				return 1;
-			case eImageType::UInt8RGB:
+			case EImageType::UInt8RGB:
 				return 3;
 			default:
 				assert(false && "Unsupported image type.");
@@ -53,16 +53,16 @@ namespace minicv
 	}
 
 	Image::Image()
-		: Image(0, 0, eImageType::UInt8Grayscale)
+		: Image(0, 0, EImageType::UInt8Grayscale)
 	{
 	}
 
 	Image::Image(const int width, const int height)
-		: Image(width, height, eImageType::UInt8Grayscale)
+		: Image(width, height, EImageType::UInt8Grayscale)
 	{
 	}
 
-	Image::Image(const int width, const int height, const eImageType imageType)
+	Image::Image(const int width, const int height, const EImageType imageType)
 		: mWidth(width)
 		, mHeight(height)
 		, mChannelCount(GetChannelCountFromImageType(imageType))
@@ -100,7 +100,7 @@ namespace minicv
 		return mBytesPerRow;
 	}
 
-	eImageType Image::GetImageType() const
+	EImageType Image::GetImageType() const
 	{
 		return mImageType;
 	}
@@ -127,7 +127,7 @@ namespace minicv
 
 	std::uint8_t& Image::GetGrayscalePixel(const int x, const int y)
 	{
-		assert(mImageType == eImageType::UInt8Grayscale && "image type must be UInt8Grayscale.");
+		assert(mImageType == EImageType::UInt8Grayscale && "image type must be UInt8Grayscale.");
 		assert(x >= 0 && x < mWidth && "x is out of range.");
 		assert(y >= 0 && y < mHeight && "y is out of range.");
 
@@ -138,7 +138,7 @@ namespace minicv
 
 	const std::uint8_t& Image::GetGrayscalePixel(const int x, const int y) const
 	{
-		assert(mImageType == eImageType::UInt8Grayscale && "image type must be UInt8Grayscale.");
+		assert(mImageType == EImageType::UInt8Grayscale && "image type must be UInt8Grayscale.");
 		assert(x >= 0 && x < mWidth && "x is out of range.");
 		assert(y >= 0 && y < mHeight && "y is out of range.");
 
@@ -147,9 +147,9 @@ namespace minicv
 		return mPixels[index];
 	}
 
-	std::uint8_t& Image::GetRgbPixel(const int x, const int y, const eRgbChannel rgbChannel)
+	std::uint8_t& Image::GetRgbPixel(const int x, const int y, const ERgbChannel rgbChannel)
 	{
-		assert(mImageType == eImageType::UInt8RGB && "image type must be UInt8RGB.");
+		assert(mImageType == EImageType::UInt8RGB && "image type must be UInt8RGB.");
 		assert(x >= 0 && x < mWidth && "x is out of range.");
 		assert(y >= 0 && y < mHeight && "y is out of range.");
 
@@ -161,9 +161,9 @@ namespace minicv
 		return mPixels[index];
 	}
 
-	const std::uint8_t& Image::GetRgbPixel(const int x, const int y, const eRgbChannel rgbChannel) const
+	const std::uint8_t& Image::GetRgbPixel(const int x, const int y, const ERgbChannel rgbChannel) const
 	{
-		assert(mImageType == eImageType::UInt8RGB && "image type must be UInt8RGB.");
+		assert(mImageType == EImageType::UInt8RGB && "image type must be UInt8RGB.");
 		assert(x >= 0 && x < mWidth && "x is out of range.");
 		assert(y >= 0 && y < mHeight && "y is out of range.");
 

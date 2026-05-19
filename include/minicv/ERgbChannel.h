@@ -2,7 +2,7 @@
 
 namespace minicv
 {
-	enum class eRgbChannel
+	enum class ERgbChannel
 	{
 		Red = 0,
 		Green = 1,

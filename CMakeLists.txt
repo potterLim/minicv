@@ -46,8 +46,8 @@ if(MINICV_BUILD_TESTS)
     if(BUILD_TESTING)
         add_executable(minicv_tests
             tests/main.cpp
-            tests/image_test.cpp
-            tests/image_test.h
+            tests/ImageTest.cpp
+            tests/ImageTest.h
         )
 
         target_link_libraries(minicv_tests

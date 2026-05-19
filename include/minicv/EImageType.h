@@ -2,7 +2,7 @@
 
 namespace minicv
 {
-	enum class eImageType
+	enum class EImageType
 	{
 		UInt8Grayscale,
 		UInt8RGB
