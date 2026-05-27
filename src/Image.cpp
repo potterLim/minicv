@@ -208,7 +208,9 @@ namespace minicv
 		assert(Contains(region) && "region must be inside the image.");
 
 		Image extractedImage(region.Width, region.Height, mImageType);
+		const std::size_t sourceColumnOffset = static_cast<std::size_t>(region.X) * static_cast<std::size_t>(mChannelCount);
 		const std::size_t bytesPerRegionRow = static_cast<std::size_t>(region.Width) * static_cast<std::size_t>(mChannelCount);
+
 		if (bytesPerRegionRow == 0)
 		{
 			return extractedImage;
@@ -216,10 +218,11 @@ namespace minicv
 
 		for (int y = 0; y < region.Height; ++y)
 		{
-			const std::size_t sourceIndex = static_cast<std::size_t>(region.Y + y) * static_cast<std::size_t>(mBytesPerRow) + static_cast<std::size_t>(region.X) * static_cast<std::size_t>(mChannelCount);
-			const std::size_t destinationIndex = static_cast<std::size_t>(y) * static_cast<std::size_t>(extractedImage.mBytesPerRow);
+			const std::size_t sourceRowOffset = static_cast<std::size_t>(region.Y + y) * static_cast<std::size_t>(mBytesPerRow);
+			const std::size_t destinationRowOffset = static_cast<std::size_t>(y) * static_cast<std::size_t>(extractedImage.mBytesPerRow);
+			const std::size_t sourceIndex = sourceRowOffset + sourceColumnOffset;
 
-			std::memcpy(extractedImage.mPixels.data() + destinationIndex, mPixels.data() + sourceIndex, bytesPerRegionRow);
+			std::memcpy(extractedImage.mPixels.data() + destinationRowOffset, mPixels.data() + sourceIndex, bytesPerRegionRow);
 		}
 
 		return extractedImage;
@@ -241,7 +244,8 @@ namespace minicv
 		assert(x >= 0 && x < mWidth && "x is out of range.");
 		assert(y >= 0 && y < mHeight && "y is out of range.");
 
-		const std::size_t index = static_cast<std::size_t>(y) * static_cast<std::size_t>(mBytesPerRow) + static_cast<std::size_t>(x);
+		const std::size_t rowOffset = static_cast<std::size_t>(y) * static_cast<std::size_t>(mBytesPerRow);
+		const std::size_t index = rowOffset + static_cast<std::size_t>(x);
 
 		return mPixels[index];
 	}
@@ -252,7 +256,8 @@ namespace minicv
 		assert(x >= 0 && x < mWidth && "x is out of range.");
 		assert(y >= 0 && y < mHeight && "y is out of range.");
 
-		const std::size_t index = static_cast<std::size_t>(y) * static_cast<std::size_t>(mBytesPerRow) + static_cast<std::size_t>(x);
+		const std::size_t rowOffset = static_cast<std::size_t>(y) * static_cast<std::size_t>(mBytesPerRow);
+		const std::size_t index = rowOffset + static_cast<std::size_t>(x);
 
 		return mPixels[index];
 	}
@@ -266,7 +271,9 @@ namespace minicv
 		const std::size_t channelIndex = static_cast<std::size_t>(rgbChannel);
 		assert(channelIndex < static_cast<std::size_t>(mChannelCount) && "rgbChannel is out of range.");
 
-		const std::size_t index = static_cast<std::size_t>(y) * static_cast<std::size_t>(mBytesPerRow) + static_cast<std::size_t>(x) * static_cast<std::size_t>(mChannelCount) + channelIndex;
+		const std::size_t rowOffset = static_cast<std::size_t>(y) * static_cast<std::size_t>(mBytesPerRow);
+		const std::size_t columnOffset = static_cast<std::size_t>(x) * static_cast<std::size_t>(mChannelCount);
+		const std::size_t index = rowOffset + columnOffset + channelIndex;
 
 		return mPixels[index];
 	}
@@ -280,7 +287,9 @@ namespace minicv
 		const std::size_t channelIndex = static_cast<std::size_t>(rgbChannel);
 		assert(channelIndex < static_cast<std::size_t>(mChannelCount) && "rgbChannel is out of range.");
 
-		const std::size_t index = static_cast<std::size_t>(y) * static_cast<std::size_t>(mBytesPerRow) + static_cast<std::size_t>(x) * static_cast<std::size_t>(mChannelCount) + channelIndex;
+		const std::size_t rowOffset = static_cast<std::size_t>(y) * static_cast<std::size_t>(mBytesPerRow);
+		const std::size_t columnOffset = static_cast<std::size_t>(x) * static_cast<std::size_t>(mChannelCount);
+		const std::size_t index = rowOffset + columnOffset + channelIndex;
 
 		return mPixels[index];
 	}
