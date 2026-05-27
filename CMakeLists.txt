@@ -11,6 +11,9 @@ add_library(miniCV STATIC
     include/minicv/Image.h
     include/minicv/EImageType.h
     include/minicv/ERgbChannel.h
+    include/minicv/Point.h
+    include/minicv/Rect.h
+    include/minicv/Size.h
 )
 add_library(miniCV::miniCV ALIAS miniCV)
 

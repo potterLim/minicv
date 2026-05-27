@@ -1,5 +1,7 @@
+#include <algorithm>
 #include <cassert>
 #include <cstddef>
+#include <cstring>
 #include <limits>
 
 #include "minicv/Image.h"
@@ -29,10 +31,8 @@ namespace minicv
 
 			const std::size_t widthSize = static_cast<std::size_t>(width);
 			const std::size_t channelCountSize = static_cast<std::size_t>(channelCount);
-			const std::size_t maxBytesPerRow = static_cast<std::size_t>(std::numeric_limits<int>::max());
-			const bool bytesPerRowFitsInInt = widthSize <= maxBytesPerRow / channelCountSize;
 
-			assert(bytesPerRowFitsInInt && "bytes per row exceeds int range.");
+			assert(widthSize <= static_cast<std::size_t>(std::numeric_limits<int>::max()) / channelCountSize && "bytes per row exceeds int range.");
 
 			return static_cast<int>(widthSize * channelCountSize);
 		}
@@ -44,9 +44,8 @@ namespace minicv
 
 			const std::size_t heightSize = static_cast<std::size_t>(height);
 			const std::size_t bytesPerRowSize = static_cast<std::size_t>(bytesPerRow);
-			const bool byteCountDoesNotOverflow = bytesPerRowSize == 0 || heightSize <= std::numeric_limits<std::size_t>::max() / bytesPerRowSize;
 
-			assert(byteCountDoesNotOverflow && "image byte count overflow.");
+			assert((bytesPerRowSize == 0 || heightSize <= std::numeric_limits<std::size_t>::max() / bytesPerRowSize) && "image byte count overflow.");
 
 			return heightSize * bytesPerRowSize;
 		}
@@ -75,6 +74,53 @@ namespace minicv
 		mPixels.resize(byteCount);
 	}
 
+	Image::Image(const Size size)
+		: Image(size.Width, size.Height, EImageType::UInt8Grayscale)
+	{
+	}
+
+	Image::Image(const Size size, const EImageType imageType)
+		: Image(size.Width, size.Height, imageType)
+	{
+	}
+
+	void Image::Create(const int width, const int height)
+	{
+		Create(width, height, EImageType::UInt8Grayscale);
+	}
+
+	void Image::Create(const int width, const int height, const EImageType imageType)
+	{
+		*this = Image(width, height, imageType);
+	}
+
+	void Image::Create(const Size size)
+	{
+		Create(size.Width, size.Height, EImageType::UInt8Grayscale);
+	}
+
+	void Image::Create(const Size size, const EImageType imageType)
+	{
+		Create(size.Width, size.Height, imageType);
+	}
+
+	void Image::Fill(const std::uint8_t value)
+	{
+		std::fill(mPixels.begin(), mPixels.end(), value);
+	}
+
+	void Image::FillRgb(const std::uint8_t red, const std::uint8_t green, const std::uint8_t blue)
+	{
+		assert(mImageType == EImageType::UInt8RGB && "image type must be UInt8RGB.");
+
+		for (std::size_t index = 0; index < mPixels.size(); index += static_cast<std::size_t>(mChannelCount))
+		{
+			mPixels[index + static_cast<std::size_t>(ERgbChannel::Red)] = red;
+			mPixels[index + static_cast<std::size_t>(ERgbChannel::Green)] = green;
+			mPixels[index + static_cast<std::size_t>(ERgbChannel::Blue)] = blue;
+		}
+	}
+
 	bool Image::IsEmpty() const
 	{
 		return mPixels.empty();
@@ -88,6 +134,11 @@ namespace minicv
 	int Image::GetHeight() const
 	{
 		return mHeight;
+	}
+
+	Size Image::GetSize() const
+	{
+		return Size{ mWidth, mHeight };
 	}
 
 	int Image::GetChannelCount() const
@@ -113,6 +164,65 @@ namespace minicv
 	std::size_t Image::GetByteCount() const
 	{
 		return static_cast<std::size_t>(mHeight) * static_cast<std::size_t>(mBytesPerRow);
+	}
+
+	bool Image::HasSameSize(const Image& other) const
+	{
+		return mWidth == other.mWidth && mHeight == other.mHeight;
+	}
+
+	bool Image::HasSameShape(const Image& other) const
+	{
+		return HasSameSize(other) && mImageType == other.mImageType;
+	}
+
+	bool Image::Contains(const Point point) const
+	{
+		return point.X >= 0 && point.X < mWidth && point.Y >= 0 && point.Y < mHeight;
+	}
+
+	bool Image::Contains(const Rect region) const
+	{
+		if (region.X < 0 || region.Y < 0 || region.Width < 0 || region.Height < 0)
+		{
+			return false;
+		}
+
+		const std::size_t imageWidth = static_cast<std::size_t>(mWidth);
+		const std::size_t imageHeight = static_cast<std::size_t>(mHeight);
+		const std::size_t regionX = static_cast<std::size_t>(region.X);
+		const std::size_t regionY = static_cast<std::size_t>(region.Y);
+		const std::size_t regionWidth = static_cast<std::size_t>(region.Width);
+		const std::size_t regionHeight = static_cast<std::size_t>(region.Height);
+
+		return regionX <= imageWidth && regionWidth <= imageWidth - regionX && regionY <= imageHeight && regionHeight <= imageHeight - regionY;
+	}
+
+	Image Image::Clone() const
+	{
+		return *this;
+	}
+
+	Image Image::ExtractRegion(const Rect region) const
+	{
+		assert(Contains(region) && "region must be inside the image.");
+
+		Image extractedImage(region.Width, region.Height, mImageType);
+		const std::size_t bytesPerRegionRow = static_cast<std::size_t>(region.Width) * static_cast<std::size_t>(mChannelCount);
+		if (bytesPerRegionRow == 0)
+		{
+			return extractedImage;
+		}
+
+		for (int y = 0; y < region.Height; ++y)
+		{
+			const std::size_t sourceIndex = static_cast<std::size_t>(region.Y + y) * static_cast<std::size_t>(mBytesPerRow) + static_cast<std::size_t>(region.X) * static_cast<std::size_t>(mChannelCount);
+			const std::size_t destinationIndex = static_cast<std::size_t>(y) * static_cast<std::size_t>(extractedImage.mBytesPerRow);
+
+			std::memcpy(extractedImage.mPixels.data() + destinationIndex, mPixels.data() + sourceIndex, bytesPerRegionRow);
+		}
+
+		return extractedImage;
 	}
 
 	std::uint8_t* Image::GetPixelData()
