@@ -26,7 +26,7 @@ namespace minicv
 		void Create(const Size size);
 		void Create(const Size size, const EImageType imageType);
 
-		void Fill(const std::uint8_t value);
+		void Fill(const std::uint8_t pixelValue);
 		void FillRgb(const std::uint8_t red, const std::uint8_t green, const std::uint8_t blue);
 
 		[[nodiscard]] bool IsEmpty() const;

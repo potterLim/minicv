@@ -104,9 +104,9 @@ namespace minicv
 		Create(size.Width, size.Height, imageType);
 	}
 
-	void Image::Fill(const std::uint8_t value)
+	void Image::Fill(const std::uint8_t pixelValue)
 	{
-		std::fill(mPixels.begin(), mPixels.end(), value);
+		std::fill(mPixels.begin(), mPixels.end(), pixelValue);
 	}
 
 	void Image::FillRgb(const std::uint8_t red, const std::uint8_t green, const std::uint8_t blue)
