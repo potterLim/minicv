@@ -195,7 +195,10 @@ namespace minicv
 		const std::size_t regionWidth = static_cast<std::size_t>(region.Width);
 		const std::size_t regionHeight = static_cast<std::size_t>(region.Height);
 
-		return regionX <= imageWidth && regionWidth <= imageWidth - regionX && regionY <= imageHeight && regionHeight <= imageHeight - regionY;
+		const bool fitsHorizontally = regionX <= imageWidth && regionWidth <= imageWidth - regionX;
+		const bool fitsVertically = regionY <= imageHeight && regionHeight <= imageHeight - regionY;
+
+		return fitsHorizontally && fitsVertically;
 	}
 
 	Image Image::Clone() const
