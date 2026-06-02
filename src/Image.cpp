@@ -14,9 +14,9 @@ namespace minicv
 		{
 			switch (imageType)
 			{
-			case EImageType::UInt8Grayscale:
+			case EImageType::UINT8_GRAYSCALE:
 				return 1;
-			case EImageType::UInt8RGB:
+			case EImageType::UINT8_RGB:
 				return 3;
 			default:
 				assert(false && "Unsupported image type.");
@@ -52,12 +52,12 @@ namespace minicv
 	}
 
 	Image::Image()
-		: Image(0, 0, EImageType::UInt8Grayscale)
+		: Image(0, 0, EImageType::UINT8_GRAYSCALE)
 	{
 	}
 
 	Image::Image(const int width, const int height)
-		: Image(width, height, EImageType::UInt8Grayscale)
+		: Image(width, height, EImageType::UINT8_GRAYSCALE)
 	{
 	}
 
@@ -75,7 +75,7 @@ namespace minicv
 	}
 
 	Image::Image(const Size size)
-		: Image(size.Width, size.Height, EImageType::UInt8Grayscale)
+		: Image(size.Width, size.Height, EImageType::UINT8_GRAYSCALE)
 	{
 	}
 
@@ -86,7 +86,7 @@ namespace minicv
 
 	void Image::Create(const int width, const int height)
 	{
-		Create(width, height, EImageType::UInt8Grayscale);
+		Create(width, height, EImageType::UINT8_GRAYSCALE);
 	}
 
 	void Image::Create(const int width, const int height, const EImageType imageType)
@@ -96,7 +96,7 @@ namespace minicv
 
 	void Image::Create(const Size size)
 	{
-		Create(size.Width, size.Height, EImageType::UInt8Grayscale);
+		Create(size.Width, size.Height, EImageType::UINT8_GRAYSCALE);
 	}
 
 	void Image::Create(const Size size, const EImageType imageType)
@@ -111,13 +111,13 @@ namespace minicv
 
 	void Image::FillRgb(const std::uint8_t red, const std::uint8_t green, const std::uint8_t blue)
 	{
-		assert(mImageType == EImageType::UInt8RGB && "image type must be UInt8RGB.");
+		assert(mImageType == EImageType::UINT8_RGB && "image type must be UINT8_RGB.");
 
 		for (std::size_t index = 0; index < mPixels.size(); index += static_cast<std::size_t>(mChannelCount))
 		{
-			mPixels[index + static_cast<std::size_t>(ERgbChannel::Red)] = red;
-			mPixels[index + static_cast<std::size_t>(ERgbChannel::Green)] = green;
-			mPixels[index + static_cast<std::size_t>(ERgbChannel::Blue)] = blue;
+			mPixels[index + static_cast<std::size_t>(ERgbChannel::RED)] = red;
+			mPixels[index + static_cast<std::size_t>(ERgbChannel::GREEN)] = green;
+			mPixels[index + static_cast<std::size_t>(ERgbChannel::BLUE)] = blue;
 		}
 	}
 
@@ -240,7 +240,7 @@ namespace minicv
 
 	std::uint8_t& Image::GetGrayscalePixel(const int x, const int y)
 	{
-		assert(mImageType == EImageType::UInt8Grayscale && "image type must be UInt8Grayscale.");
+		assert(mImageType == EImageType::UINT8_GRAYSCALE && "image type must be UINT8_GRAYSCALE.");
 		assert(x >= 0 && x < mWidth && "x is out of range.");
 		assert(y >= 0 && y < mHeight && "y is out of range.");
 
@@ -252,7 +252,7 @@ namespace minicv
 
 	const std::uint8_t& Image::GetGrayscalePixel(const int x, const int y) const
 	{
-		assert(mImageType == EImageType::UInt8Grayscale && "image type must be UInt8Grayscale.");
+		assert(mImageType == EImageType::UINT8_GRAYSCALE && "image type must be UINT8_GRAYSCALE.");
 		assert(x >= 0 && x < mWidth && "x is out of range.");
 		assert(y >= 0 && y < mHeight && "y is out of range.");
 
@@ -264,7 +264,7 @@ namespace minicv
 
 	std::uint8_t& Image::GetRgbPixel(const int x, const int y, const ERgbChannel rgbChannel)
 	{
-		assert(mImageType == EImageType::UInt8RGB && "image type must be UInt8RGB.");
+		assert(mImageType == EImageType::UINT8_RGB && "image type must be UINT8_RGB.");
 		assert(x >= 0 && x < mWidth && "x is out of range.");
 		assert(y >= 0 && y < mHeight && "y is out of range.");
 
@@ -280,7 +280,7 @@ namespace minicv
 
 	const std::uint8_t& Image::GetRgbPixel(const int x, const int y, const ERgbChannel rgbChannel) const
 	{
-		assert(mImageType == EImageType::UInt8RGB && "image type must be UInt8RGB.");
+		assert(mImageType == EImageType::UINT8_RGB && "image type must be UINT8_RGB.");
 		assert(x >= 0 && x < mWidth && "x is out of range.");
 		assert(y >= 0 && y < mHeight && "y is out of range.");
 

@@ -17,7 +17,7 @@ namespace
 		assert(image.GetHeight() == 0);
 		assert(image.GetChannelCount() == 1);
 		assert(image.GetBytesPerRow() == 0);
-		assert(image.GetImageType() == minicv::EImageType::UInt8Grayscale);
+		assert(image.GetImageType() == minicv::EImageType::UINT8_GRAYSCALE);
 		assert(image.GetPixelCount() == 0);
 		assert(image.GetByteCount() == 0);
 	}
@@ -31,7 +31,7 @@ namespace
 		assert(image.GetHeight() == 2);
 		assert(image.GetChannelCount() == 1);
 		assert(image.GetBytesPerRow() == 3);
-		assert(image.GetImageType() == minicv::EImageType::UInt8Grayscale);
+		assert(image.GetImageType() == minicv::EImageType::UINT8_GRAYSCALE);
 		assert(image.GetPixelCount() == 6);
 		assert(image.GetByteCount() == 6);
 
@@ -45,14 +45,14 @@ namespace
 
 	void TestRgbConstructor()
 	{
-		const minicv::Image image(2, 3, minicv::EImageType::UInt8RGB);
+		const minicv::Image image(2, 3, minicv::EImageType::UINT8_RGB);
 
 		assert(!image.IsEmpty());
 		assert(image.GetWidth() == 2);
 		assert(image.GetHeight() == 3);
 		assert(image.GetChannelCount() == 3);
 		assert(image.GetBytesPerRow() == 6);
-		assert(image.GetImageType() == minicv::EImageType::UInt8RGB);
+		assert(image.GetImageType() == minicv::EImageType::UINT8_RGB);
 		assert(image.GetPixelCount() == 6);
 		assert(image.GetByteCount() == 18);
 		assert(image.GetPixelData() != nullptr);
@@ -61,27 +61,27 @@ namespace
 	void TestSizeConstructor()
 	{
 		const minicv::Size size{ 4, 3 };
-		const minicv::Image image(size, minicv::EImageType::UInt8RGB);
+		const minicv::Image image(size, minicv::EImageType::UINT8_RGB);
 
 		assert(image.GetWidth() == 4);
 		assert(image.GetHeight() == 3);
 		assert(image.GetSize().Width == 4);
 		assert(image.GetSize().Height == 3);
-		assert(image.GetImageType() == minicv::EImageType::UInt8RGB);
+		assert(image.GetImageType() == minicv::EImageType::UINT8_RGB);
 		assert(image.GetChannelCount() == 3);
 		assert(image.GetByteCount() == 36);
 	}
 
 	void TestCreate()
 	{
-		minicv::Image image(1, 1, minicv::EImageType::UInt8RGB);
+		minicv::Image image(1, 1, minicv::EImageType::UINT8_RGB);
 		image.FillRgb(10, 20, 30);
 
 		image.Create(3, 2);
 
 		assert(image.GetWidth() == 3);
 		assert(image.GetHeight() == 2);
-		assert(image.GetImageType() == minicv::EImageType::UInt8Grayscale);
+		assert(image.GetImageType() == minicv::EImageType::UINT8_GRAYSCALE);
 		assert(image.GetChannelCount() == 1);
 		assert(image.GetByteCount() == 6);
 
@@ -91,11 +91,11 @@ namespace
 		}
 
 		const minicv::Size size{ 2, 2 };
-		image.Create(size, minicv::EImageType::UInt8RGB);
+		image.Create(size, minicv::EImageType::UINT8_RGB);
 
 		assert(image.GetWidth() == 2);
 		assert(image.GetHeight() == 2);
-		assert(image.GetImageType() == minicv::EImageType::UInt8RGB);
+		assert(image.GetImageType() == minicv::EImageType::UINT8_RGB);
 		assert(image.GetChannelCount() == 3);
 		assert(image.GetByteCount() == 12);
 	}
@@ -117,7 +117,7 @@ namespace
 	void TestLargeEmptyImages()
 	{
 		const int maxRgbWidth = std::numeric_limits<int>::max() / 3;
-		const minicv::Image wideImage(maxRgbWidth, 0, minicv::EImageType::UInt8RGB);
+		const minicv::Image wideImage(maxRgbWidth, 0, minicv::EImageType::UINT8_RGB);
 
 		assert(wideImage.IsEmpty());
 		assert(wideImage.GetWidth() == maxRgbWidth);
@@ -149,23 +149,23 @@ namespace
 
 	void TestRgbPixelAccess()
 	{
-		minicv::Image image(2, 2, minicv::EImageType::UInt8RGB);
+		minicv::Image image(2, 2, minicv::EImageType::UINT8_RGB);
 
-		image.GetRgbPixel(1, 1, minicv::ERgbChannel::Red) = 10;
-		image.GetRgbPixel(1, 1, minicv::ERgbChannel::Green) = 20;
-		image.GetRgbPixel(1, 1, minicv::ERgbChannel::Blue) = 30;
+		image.GetRgbPixel(1, 1, minicv::ERgbChannel::RED) = 10;
+		image.GetRgbPixel(1, 1, minicv::ERgbChannel::GREEN) = 20;
+		image.GetRgbPixel(1, 1, minicv::ERgbChannel::BLUE) = 30;
 
-		assert(image.GetRgbPixel(1, 1, minicv::ERgbChannel::Red) == 10);
-		assert(image.GetRgbPixel(1, 1, minicv::ERgbChannel::Green) == 20);
-		assert(image.GetRgbPixel(1, 1, minicv::ERgbChannel::Blue) == 30);
+		assert(image.GetRgbPixel(1, 1, minicv::ERgbChannel::RED) == 10);
+		assert(image.GetRgbPixel(1, 1, minicv::ERgbChannel::GREEN) == 20);
+		assert(image.GetRgbPixel(1, 1, minicv::ERgbChannel::BLUE) == 30);
 
 		assert(image.GetPixelData()[9] == 10);
 		assert(image.GetPixelData()[10] == 20);
 		assert(image.GetPixelData()[11] == 30);
 
-		assert(static_cast<const minicv::Image&>(image).GetRgbPixel(1, 1, minicv::ERgbChannel::Red) == 10);
-		assert(static_cast<const minicv::Image&>(image).GetRgbPixel(1, 1, minicv::ERgbChannel::Green) == 20);
-		assert(static_cast<const minicv::Image&>(image).GetRgbPixel(1, 1, minicv::ERgbChannel::Blue) == 30);
+		assert(static_cast<const minicv::Image&>(image).GetRgbPixel(1, 1, minicv::ERgbChannel::RED) == 10);
+		assert(static_cast<const minicv::Image&>(image).GetRgbPixel(1, 1, minicv::ERgbChannel::GREEN) == 20);
+		assert(static_cast<const minicv::Image&>(image).GetRgbPixel(1, 1, minicv::ERgbChannel::BLUE) == 30);
 	}
 
 	void TestFill()
@@ -182,7 +182,7 @@ namespace
 
 	void TestFillRgb()
 	{
-		minicv::Image image(2, 2, minicv::EImageType::UInt8RGB);
+		minicv::Image image(2, 2, minicv::EImageType::UINT8_RGB);
 
 		image.FillRgb(10, 20, 30);
 
@@ -190,9 +190,9 @@ namespace
 		{
 			for (int x = 0; x < image.GetWidth(); ++x)
 			{
-				assert(image.GetRgbPixel(x, y, minicv::ERgbChannel::Red) == 10);
-				assert(image.GetRgbPixel(x, y, minicv::ERgbChannel::Green) == 20);
-				assert(image.GetRgbPixel(x, y, minicv::ERgbChannel::Blue) == 30);
+				assert(image.GetRgbPixel(x, y, minicv::ERgbChannel::RED) == 10);
+				assert(image.GetRgbPixel(x, y, minicv::ERgbChannel::GREEN) == 20);
+				assert(image.GetRgbPixel(x, y, minicv::ERgbChannel::BLUE) == 30);
 			}
 		}
 	}
@@ -201,7 +201,7 @@ namespace
 	{
 		const minicv::Image grayscaleImage(3, 2);
 		const minicv::Image sameShapeImage(3, 2);
-		const minicv::Image sameSizeRgbImage(3, 2, minicv::EImageType::UInt8RGB);
+		const minicv::Image sameSizeRgbImage(3, 2, minicv::EImageType::UINT8_RGB);
 		const minicv::Image differentSizeImage(2, 3);
 
 		assert(grayscaleImage.HasSameSize(sameShapeImage));
@@ -250,7 +250,7 @@ namespace
 
 		assert(clonedImage.GetWidth() == 2);
 		assert(clonedImage.GetHeight() == 2);
-		assert(clonedImage.GetImageType() == minicv::EImageType::UInt8Grayscale);
+		assert(clonedImage.GetImageType() == minicv::EImageType::UINT8_GRAYSCALE);
 		assert(clonedImage.GetGrayscalePixel(1, 1) == 77);
 		assert(image.GetGrayscalePixel(1, 1) == 11);
 	}
@@ -271,7 +271,7 @@ namespace
 
 		assert(region.GetWidth() == 2);
 		assert(region.GetHeight() == 2);
-		assert(region.GetImageType() == minicv::EImageType::UInt8Grayscale);
+		assert(region.GetImageType() == minicv::EImageType::UINT8_GRAYSCALE);
 		assert(region.GetGrayscalePixel(0, 0) == 11);
 		assert(region.GetGrayscalePixel(1, 0) == 12);
 		assert(region.GetGrayscalePixel(0, 1) == 21);
@@ -283,26 +283,26 @@ namespace
 
 	void TestExtractRgbRegion()
 	{
-		minicv::Image image(3, 2, minicv::EImageType::UInt8RGB);
+		minicv::Image image(3, 2, minicv::EImageType::UINT8_RGB);
 
-		image.GetRgbPixel(1, 0, minicv::ERgbChannel::Red) = 10;
-		image.GetRgbPixel(1, 0, minicv::ERgbChannel::Green) = 20;
-		image.GetRgbPixel(1, 0, minicv::ERgbChannel::Blue) = 30;
-		image.GetRgbPixel(2, 0, minicv::ERgbChannel::Red) = 40;
-		image.GetRgbPixel(2, 0, minicv::ERgbChannel::Green) = 50;
-		image.GetRgbPixel(2, 0, minicv::ERgbChannel::Blue) = 60;
+		image.GetRgbPixel(1, 0, minicv::ERgbChannel::RED) = 10;
+		image.GetRgbPixel(1, 0, minicv::ERgbChannel::GREEN) = 20;
+		image.GetRgbPixel(1, 0, minicv::ERgbChannel::BLUE) = 30;
+		image.GetRgbPixel(2, 0, minicv::ERgbChannel::RED) = 40;
+		image.GetRgbPixel(2, 0, minicv::ERgbChannel::GREEN) = 50;
+		image.GetRgbPixel(2, 0, minicv::ERgbChannel::BLUE) = 60;
 
 		minicv::Image region = image.ExtractRegion(minicv::Rect{ 1, 0, 2, 1 });
 
 		assert(region.GetWidth() == 2);
 		assert(region.GetHeight() == 1);
-		assert(region.GetImageType() == minicv::EImageType::UInt8RGB);
-		assert(region.GetRgbPixel(0, 0, minicv::ERgbChannel::Red) == 10);
-		assert(region.GetRgbPixel(0, 0, minicv::ERgbChannel::Green) == 20);
-		assert(region.GetRgbPixel(0, 0, minicv::ERgbChannel::Blue) == 30);
-		assert(region.GetRgbPixel(1, 0, minicv::ERgbChannel::Red) == 40);
-		assert(region.GetRgbPixel(1, 0, minicv::ERgbChannel::Green) == 50);
-		assert(region.GetRgbPixel(1, 0, minicv::ERgbChannel::Blue) == 60);
+		assert(region.GetImageType() == minicv::EImageType::UINT8_RGB);
+		assert(region.GetRgbPixel(0, 0, minicv::ERgbChannel::RED) == 10);
+		assert(region.GetRgbPixel(0, 0, minicv::ERgbChannel::GREEN) == 20);
+		assert(region.GetRgbPixel(0, 0, minicv::ERgbChannel::BLUE) == 30);
+		assert(region.GetRgbPixel(1, 0, minicv::ERgbChannel::RED) == 40);
+		assert(region.GetRgbPixel(1, 0, minicv::ERgbChannel::GREEN) == 50);
+		assert(region.GetRgbPixel(1, 0, minicv::ERgbChannel::BLUE) == 60);
 	}
 }
 

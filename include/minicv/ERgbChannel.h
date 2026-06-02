@@ -4,8 +4,8 @@ namespace minicv
 {
 	enum class ERgbChannel
 	{
-		Red = 0,
-		Green = 1,
-		Blue = 2
+		RED = 0,
+		GREEN = 1,
+		BLUE = 2
 	};
 }
