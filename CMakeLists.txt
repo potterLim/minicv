@@ -51,6 +51,8 @@ if(MINICV_BUILD_TESTS)
     if(BUILD_TESTING)
         add_executable(minicv_tests
             tests/main.cpp
+            tests/ImageOperationsTest.cpp
+            tests/ImageOperationsTest.h
             tests/ImageTest.cpp
             tests/ImageTest.h
         )

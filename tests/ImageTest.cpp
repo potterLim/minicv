@@ -203,15 +203,21 @@ namespace
 		const minicv::Image sameShapeImage(3, 2);
 		const minicv::Image sameSizeRgbImage(3, 2, minicv::EImageType::UINT8_RGB);
 		const minicv::Image differentSizeImage(2, 3);
+		minicv::Image differentContentImage(3, 2);
+		differentContentImage.GetGrayscalePixel(0, 0) = 1;
 
 		assert(grayscaleImage.HasSameSize(sameShapeImage));
 		assert(grayscaleImage.HasSameShape(sameShapeImage));
+		assert(grayscaleImage.HasSameContent(sameShapeImage));
 
 		assert(grayscaleImage.HasSameSize(sameSizeRgbImage));
 		assert(!grayscaleImage.HasSameShape(sameSizeRgbImage));
+		assert(!grayscaleImage.HasSameContent(sameSizeRgbImage));
 
 		assert(!grayscaleImage.HasSameSize(differentSizeImage));
 		assert(!grayscaleImage.HasSameShape(differentSizeImage));
+		assert(!grayscaleImage.HasSameContent(differentSizeImage));
+		assert(!grayscaleImage.HasSameContent(differentContentImage));
 	}
 
 	void TestContainsPoint()
