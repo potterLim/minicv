@@ -176,6 +176,11 @@ namespace minicv
 		return HasSameSize(other) && mImageType == other.mImageType;
 	}
 
+	bool Image::HasSameContent(const Image& other) const
+	{
+		return HasSameShape(other) && mPixels == other.mPixels;
+	}
+
 	bool Image::Contains(const Point point) const
 	{
 		return point.X >= 0 && point.X < mWidth && point.Y >= 0 && point.Y < mHeight;

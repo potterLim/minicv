@@ -43,6 +43,7 @@ namespace minicv
 
 		[[nodiscard]] bool HasSameSize(const Image& other) const;
 		[[nodiscard]] bool HasSameShape(const Image& other) const;
+		[[nodiscard]] bool HasSameContent(const Image& other) const;
 		[[nodiscard]] bool Contains(const Point point) const;
 		[[nodiscard]] bool Contains(const Rect region) const;
 

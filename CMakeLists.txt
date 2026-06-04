@@ -8,7 +8,9 @@ project(miniCV
 
 add_library(miniCV STATIC
     src/Image.cpp
+    src/ImageOperations.cpp
     include/minicv/Image.h
+    include/minicv/ImageOperations.h
     include/minicv/EImageType.h
     include/minicv/ERgbChannel.h
     include/minicv/Point.h
