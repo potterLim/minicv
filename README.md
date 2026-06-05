@@ -36,6 +36,22 @@ cmake --build --preset macos-debug
 ctest --preset macos-debug-tests
 ```
 
+## 예제
+
+macOS:
+
+```sh
+cmake --build --preset macos-debug --target minicv_image_difference_example
+./out/build/macos/Debug/minicv_image_difference_example
+```
+
+Windows MSVC:
+
+```sh
+cmake --build --preset windows-msvc-debug --target minicv_image_difference_example
+.\out\build\windows-msvc\Debug\minicv_image_difference_example.exe
+```
+
 ## 빌드 설정
 
 제공된 CMake preset은 `Ninja Multi-Config` generator를 사용하며, 다음 설정을 기본으로 합니다.
@@ -59,6 +75,7 @@ GCC/Clang  -Wall -Wextra -Wpedantic -Wshadow
 ```text
 include/minicv/        공개 헤더
 src/                   라이브러리 구현
+examples/              작은 이미지 처리 흐름 예제
 tests/                 테스트
 ```
 

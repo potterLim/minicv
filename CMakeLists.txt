@@ -32,6 +32,7 @@ target_include_directories(miniCV
 
 option(MINICV_ENABLE_WARNINGS "Enable compiler warnings for miniCV." ON)
 option(MINICV_BUILD_TESTS "Build miniCV tests." ${PROJECT_IS_TOP_LEVEL})
+option(MINICV_BUILD_EXAMPLES "Build miniCV examples." ${PROJECT_IS_TOP_LEVEL})
 
 function(minicv_enable_warnings target_name)
     if(MINICV_ENABLE_WARNINGS)
@@ -69,4 +70,17 @@ if(MINICV_BUILD_TESTS)
             COMMAND minicv_tests
         )
     endif()
+endif()
+
+if(MINICV_BUILD_EXAMPLES)
+    add_executable(minicv_image_difference_example
+        examples/ImageDifferenceExample.cpp
+    )
+
+    target_link_libraries(minicv_image_difference_example
+        PRIVATE
+            miniCV::miniCV
+    )
+
+    minicv_enable_warnings(minicv_image_difference_example)
 endif()
