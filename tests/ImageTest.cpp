@@ -203,8 +203,12 @@ namespace
 		const minicv::Image sameShapeImage(3, 2);
 		const minicv::Image sameSizeRgbImage(3, 2, minicv::EImageType::UINT8_RGB);
 		const minicv::Image differentSizeImage(2, 3);
+		const minicv::Image rgbImage(1, 1, minicv::EImageType::UINT8_RGB);
 		minicv::Image differentContentImage(3, 2);
+		minicv::Image differentRgbContentImage(1, 1, minicv::EImageType::UINT8_RGB);
+
 		differentContentImage.GetGrayscalePixel(0, 0) = 1;
+		differentRgbContentImage.GetRgbPixel(0, 0, minicv::ERgbChannel::BLUE) = 1;
 
 		assert(grayscaleImage.HasSameSize(sameShapeImage));
 		assert(grayscaleImage.HasSameShape(sameShapeImage));
@@ -218,6 +222,8 @@ namespace
 		assert(!grayscaleImage.HasSameShape(differentSizeImage));
 		assert(!grayscaleImage.HasSameContent(differentSizeImage));
 		assert(!grayscaleImage.HasSameContent(differentContentImage));
+
+		assert(!rgbImage.HasSameContent(differentRgbContentImage));
 	}
 
 	void TestContainsPoint()
@@ -310,6 +316,17 @@ namespace
 		assert(region.GetRgbPixel(1, 0, minicv::ERgbChannel::GREEN) == 50);
 		assert(region.GetRgbPixel(1, 0, minicv::ERgbChannel::BLUE) == 60);
 	}
+
+	void TestExtractEmptyRegion()
+	{
+		const minicv::Image image(4, 3);
+		const minicv::Image region = image.ExtractRegion(minicv::Rect{ 4, 3, 0, 0 });
+
+		assert(region.IsEmpty());
+		assert(region.GetWidth() == 0);
+		assert(region.GetHeight() == 0);
+		assert(region.GetImageType() == minicv::EImageType::UINT8_GRAYSCALE);
+	}
 }
 
 void RunImageTests()
@@ -331,4 +348,5 @@ void RunImageTests()
 	TestClone();
 	TestExtractGrayscaleRegion();
 	TestExtractRgbRegion();
+	TestExtractEmptyRegion();
 }

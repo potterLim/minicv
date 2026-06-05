@@ -27,6 +27,9 @@ namespace
 		assert(differenceImage.GetGrayscalePixel(0, 0) == 15);
 		assert(differenceImage.GetGrayscalePixel(1, 0) == 10);
 		assert(differenceImage.GetGrayscalePixel(2, 0) == 50);
+
+		assert(leftImage.GetGrayscalePixel(0, 0) == 10);
+		assert(rightImage.GetGrayscalePixel(0, 0) == 25);
 	}
 
 	void TestCreateAbsoluteDifferenceRgbImage()
@@ -50,6 +53,18 @@ namespace
 		assert(differenceImage.GetRgbPixel(0, 0, minicv::ERgbChannel::BLUE) == 50);
 	}
 
+	void TestCreateAbsoluteDifferenceImageFromEmptyImages()
+	{
+		const minicv::Image leftImage;
+		const minicv::Image rightImage;
+		const minicv::Image differenceImage = minicv::CreateAbsoluteDifferenceImage(leftImage, rightImage);
+
+		assert(differenceImage.IsEmpty());
+		assert(differenceImage.GetWidth() == 0);
+		assert(differenceImage.GetHeight() == 0);
+		assert(differenceImage.GetImageType() == minicv::EImageType::UINT8_GRAYSCALE);
+	}
+
 	void TestCountNonZeroPixels()
 	{
 		minicv::Image image(4, 1);
@@ -71,8 +86,8 @@ namespace
 		image.GetRgbPixel(0, 0, minicv::ERgbChannel::BLUE) = 0;
 
 		image.GetRgbPixel(1, 0, minicv::ERgbChannel::RED) = 10;
-		image.GetRgbPixel(1, 0, minicv::ERgbChannel::GREEN) = 0;
-		image.GetRgbPixel(1, 0, minicv::ERgbChannel::BLUE) = 0;
+		image.GetRgbPixel(1, 0, minicv::ERgbChannel::GREEN) = 20;
+		image.GetRgbPixel(1, 0, minicv::ERgbChannel::BLUE) = 30;
 
 		image.GetRgbPixel(2, 0, minicv::ERgbChannel::RED) = 0;
 		image.GetRgbPixel(2, 0, minicv::ERgbChannel::GREEN) = 20;
@@ -117,6 +132,7 @@ void RunImageOperationsTests()
 {
 	TestCreateAbsoluteDifferenceImage();
 	TestCreateAbsoluteDifferenceRgbImage();
+	TestCreateAbsoluteDifferenceImageFromEmptyImages();
 	TestCountNonZeroPixels();
 	TestCountNonZeroRgbPixels();
 	TestCountNonZeroPixelsFromEmptyImage();
