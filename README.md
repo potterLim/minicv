@@ -49,7 +49,7 @@ ctest --preset macos-debug-tests
 
 ```text
 MSVC       /W4 /permissive- /Zc:__cplusplus
-GCC/Clang  -Wall -Wextra -Wpedantic
+GCC/Clang  -Wall -Wextra -Wpedantic -Wshadow
 ```
 
 테스트는 `assert` 기반이므로 Debug preset에서 실행하는 것을 기준으로 합니다.

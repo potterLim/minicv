@@ -38,7 +38,7 @@ function(minicv_enable_warnings target_name)
         target_compile_options(${target_name}
             PRIVATE
                 $<$<CXX_COMPILER_ID:MSVC>:/W4 /permissive- /Zc:__cplusplus>
-                $<$<NOT:$<CXX_COMPILER_ID:MSVC>>:-Wall -Wextra -Wpedantic>
+                $<$<NOT:$<CXX_COMPILER_ID:MSVC>>:-Wall -Wextra -Wpedantic -Wshadow>
         )
     endif()
 endfunction()
