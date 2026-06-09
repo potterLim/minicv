@@ -9,9 +9,12 @@ project(miniCV
 add_library(miniCV STATIC
     src/Image.cpp
     src/ImageOperations.cpp
+    src/PgmImageIo.cpp
     include/minicv/Image.h
     include/minicv/ImageOperations.h
+    include/minicv/PgmImageIo.h
     include/minicv/EImageType.h
+    include/minicv/EPgmFormat.h
     include/minicv/ERgbChannel.h
     include/minicv/Point.h
     include/minicv/Rect.h
@@ -56,6 +59,8 @@ if(MINICV_BUILD_TESTS)
             tests/ImageOperationsTest.h
             tests/ImageTest.cpp
             tests/ImageTest.h
+            tests/PgmImageIoTest.cpp
+            tests/PgmImageIoTest.h
         )
 
         target_link_libraries(minicv_tests
