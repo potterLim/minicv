@@ -10,11 +10,14 @@ add_library(miniCV STATIC
     src/Image.cpp
     src/ImageOperations.cpp
     src/PgmImageIo.cpp
+    src/PpmImageIo.cpp
     include/minicv/Image.h
     include/minicv/ImageOperations.h
     include/minicv/PgmImageIo.h
+    include/minicv/PpmImageIo.h
     include/minicv/EImageType.h
     include/minicv/EPgmFormat.h
+    include/minicv/EPpmFormat.h
     include/minicv/ERgbChannel.h
     include/minicv/Point.h
     include/minicv/Rect.h
@@ -61,6 +64,8 @@ if(MINICV_BUILD_TESTS)
             tests/ImageTest.h
             tests/PgmImageIoTest.cpp
             tests/PgmImageIoTest.h
+            tests/PpmImageIoTest.cpp
+            tests/PpmImageIoTest.h
         )
 
         target_link_libraries(minicv_tests
