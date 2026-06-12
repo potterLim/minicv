@@ -5,7 +5,9 @@
 #include <cstdint>
 #include <fstream>
 #include <limits>
+#include <new>
 #include <optional>
+#include <stdexcept>
 #include <string>
 #include <system_error>
 
@@ -15,7 +17,58 @@ namespace minicv
 {
 	namespace
 	{
+		constexpr int PGM_CHANNEL_COUNT = 1;
 		constexpr int PGM_MAX_PIXEL_VALUE = 255;
+		constexpr std::size_t PGM_MAX_IMAGE_BYTE_COUNT = static_cast<std::size_t>(std::numeric_limits<int>::max());
+
+		bool CanCreatePgmImage(const int width, const int height)
+		{
+			if (width <= 0 || height <= 0)
+			{
+				return false;
+			}
+
+			const std::size_t widthSize = static_cast<std::size_t>(width);
+			const std::size_t heightSize = static_cast<std::size_t>(height);
+			const std::size_t channelCount = static_cast<std::size_t>(PGM_CHANNEL_COUNT);
+
+			const bool canCalculateBytesPerRow = widthSize <= static_cast<std::size_t>(std::numeric_limits<int>::max()) / channelCount;
+			if (!canCalculateBytesPerRow)
+			{
+				return false;
+			}
+
+			const std::size_t bytesPerRow = widthSize * channelCount;
+			const bool canCalculateByteCount = heightSize <= std::numeric_limits<std::size_t>::max() / bytesPerRow;
+			if (!canCalculateByteCount)
+			{
+				return false;
+			}
+
+			const std::size_t byteCount = heightSize * bytesPerRow;
+			return byteCount <= PGM_MAX_IMAGE_BYTE_COUNT;
+		}
+
+		std::optional<Image> TryCreatePgmImage(const int width, const int height)
+		{
+			if (!CanCreatePgmImage(width, height))
+			{
+				return std::nullopt;
+			}
+
+			try
+			{
+				return Image(width, height, EImageType::UINT8_GRAYSCALE);
+			}
+			catch (const std::bad_alloc&)
+			{
+				return std::nullopt;
+			}
+			catch (const std::length_error&)
+			{
+				return std::nullopt;
+			}
+		}
 
 		bool ReadToken(std::istream& inputStream, std::string* outToken)
 		{
@@ -153,7 +206,7 @@ namespace minicv
 				return false;
 			}
 
-			return *outWidth > 0 && *outHeight > 0 && maxPixelValue == PGM_MAX_PIXEL_VALUE;
+			return maxPixelValue == PGM_MAX_PIXEL_VALUE && CanCreatePgmImage(*outWidth, *outHeight);
 		}
 
 		bool TryReadAsciiPixels(std::istream& inputStream, Image* outImage)
@@ -240,17 +293,23 @@ namespace minicv
 			return std::nullopt;
 		}
 
-		Image image(width, height, EImageType::UINT8_GRAYSCALE);
+		std::optional<Image> image = TryCreatePgmImage(width, height);
+		if (!image.has_value())
+		{
+			return std::nullopt;
+		}
+
+		Image& loadedImage = *image;
 		switch (pgmFormat)
 		{
 		case EPgmFormat::ASCII:
-			if (!TryReadAsciiPixels(inputStream, &image))
+			if (!TryReadAsciiPixels(inputStream, &loadedImage))
 			{
 				return std::nullopt;
 			}
 			break;
 		case EPgmFormat::BINARY:
-			if (!TryReadBinaryPixels(inputStream, &image))
+			if (!TryReadBinaryPixels(inputStream, &loadedImage))
 			{
 				return std::nullopt;
 			}

@@ -162,6 +162,25 @@ namespace
 		RemoveFile(filePath);
 	}
 
+	void TestLoadOversizedPgmImage()
+	{
+		const std::filesystem::path filePath = GetTestFilePath("minicv_oversized_test.pgm");
+		RemoveFile(filePath);
+
+		{
+			std::ofstream outputStream(filePath, std::ios::binary);
+			outputStream << "P2\n";
+			outputStream << "46341 46341\n";
+			outputStream << "255\n";
+		}
+
+		const std::optional<minicv::Image> loadedImage = minicv::TryLoadPgmImage(filePath);
+
+		assert(!loadedImage.has_value());
+
+		RemoveFile(filePath);
+	}
+
 	void TestSaveRgbImageAsPgmFails()
 	{
 		const std::filesystem::path filePath = GetTestFilePath("minicv_rgb_save_test.pgm");
@@ -183,5 +202,6 @@ void RunPgmImageIoTests()
 	TestLoadBinaryPgmImageWithCrLfHeader();
 	TestLoadMissingPgmImage();
 	TestLoadInvalidPgmImage();
+	TestLoadOversizedPgmImage();
 	TestSaveRgbImageAsPgmFails();
 }
