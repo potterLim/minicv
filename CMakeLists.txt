@@ -8,16 +8,18 @@ project(miniCV
 
 add_library(miniCV STATIC
     src/Image.cpp
+    src/ImageIo.cpp
     src/ImageOperations.cpp
+    src/NetpbmImageIo.cpp
+    src/NetpbmImageIo.h
     src/PgmImageIo.cpp
+    src/PgmImageIo.h
     src/PpmImageIo.cpp
+    src/PpmImageIo.h
     include/minicv/Image.h
+    include/minicv/ImageIo.h
     include/minicv/ImageOperations.h
-    include/minicv/PgmImageIo.h
-    include/minicv/PpmImageIo.h
     include/minicv/EImageType.h
-    include/minicv/EPgmFormat.h
-    include/minicv/EPpmFormat.h
     include/minicv/ERgbChannel.h
     include/minicv/Point.h
     include/minicv/Rect.h
@@ -58,14 +60,12 @@ if(MINICV_BUILD_TESTS)
     if(BUILD_TESTING)
         add_executable(minicv_tests
             tests/main.cpp
+            tests/ImageIoTest.cpp
+            tests/ImageIoTest.h
             tests/ImageOperationsTest.cpp
             tests/ImageOperationsTest.h
             tests/ImageTest.cpp
             tests/ImageTest.h
-            tests/PgmImageIoTest.cpp
-            tests/PgmImageIoTest.h
-            tests/PpmImageIoTest.cpp
-            tests/PpmImageIoTest.h
         )
 
         target_link_libraries(minicv_tests

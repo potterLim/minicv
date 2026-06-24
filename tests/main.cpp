@@ -1,14 +1,12 @@
+#include "ImageIoTest.h"
 #include "ImageOperationsTest.h"
 #include "ImageTest.h"
-#include "PgmImageIoTest.h"
-#include "PpmImageIoTest.h"
 
 int main()
 {
 	RunImageTests();
+	RunImageIoTests();
 	RunImageOperationsTests();
-	RunPgmImageIoTests();
-	RunPpmImageIoTests();
 
 	return 0;
 }

@@ -1,214 +1,17 @@
 #include <cassert>
-#include <cctype>
-#include <charconv>
-#include <cstddef>
 #include <cstdint>
+#include <filesystem>
 #include <fstream>
-#include <limits>
-#include <new>
 #include <optional>
-#include <stdexcept>
-#include <string>
-#include <system_error>
 
-#include "minicv/PgmImageIo.h"
+#include "NetpbmImageIo.h"
+#include "PgmImageIo.h"
+#include "minicv/EImageType.h"
 
-namespace minicv
+namespace minicv::netpbm
 {
 	namespace
 	{
-		constexpr int PGM_CHANNEL_COUNT = 1;
-		constexpr int PGM_MAX_PIXEL_VALUE = 255;
-		constexpr std::size_t PGM_MAX_IMAGE_BYTE_COUNT = static_cast<std::size_t>(std::numeric_limits<int>::max());
-
-		bool CanCreatePgmImage(const int width, const int height)
-		{
-			if (width <= 0 || height <= 0)
-			{
-				return false;
-			}
-
-			const std::size_t widthSize = static_cast<std::size_t>(width);
-			const std::size_t heightSize = static_cast<std::size_t>(height);
-			const std::size_t channelCount = static_cast<std::size_t>(PGM_CHANNEL_COUNT);
-
-			const bool canCalculateBytesPerRow = widthSize <= static_cast<std::size_t>(std::numeric_limits<int>::max()) / channelCount;
-			if (!canCalculateBytesPerRow)
-			{
-				return false;
-			}
-
-			const std::size_t bytesPerRow = widthSize * channelCount;
-			const bool canCalculateByteCount = heightSize <= std::numeric_limits<std::size_t>::max() / bytesPerRow;
-			if (!canCalculateByteCount)
-			{
-				return false;
-			}
-
-			const std::size_t byteCount = heightSize * bytesPerRow;
-			return byteCount <= PGM_MAX_IMAGE_BYTE_COUNT;
-		}
-
-		std::optional<Image> TryCreatePgmImage(const int width, const int height)
-		{
-			if (!CanCreatePgmImage(width, height))
-			{
-				return std::nullopt;
-			}
-
-			try
-			{
-				return Image(width, height, EImageType::UINT8_GRAYSCALE);
-			}
-			catch (const std::bad_alloc&)
-			{
-				return std::nullopt;
-			}
-			catch (const std::length_error&)
-			{
-				return std::nullopt;
-			}
-		}
-
-		bool ReadToken(std::istream& inputStream, std::string* outToken)
-		{
-			assert(outToken != nullptr && "outToken must not be null.");
-
-			outToken->clear();
-
-			char character = '\0';
-			while (inputStream.get(character))
-			{
-				if (std::isspace(static_cast<unsigned char>(character)) != 0)
-				{
-					continue;
-				}
-
-				if (character == '#')
-				{
-					inputStream.ignore(std::numeric_limits<std::streamsize>::max(), '\n');
-					continue;
-				}
-
-				outToken->push_back(character);
-				break;
-			}
-
-			if (outToken->empty())
-			{
-				return false;
-			}
-
-			while (inputStream.get(character))
-			{
-				if (std::isspace(static_cast<unsigned char>(character)) != 0)
-				{
-					if (character == '\r' && inputStream.peek() == '\n')
-					{
-						inputStream.get(character);
-					}
-
-					return true;
-				}
-
-				if (character == '#')
-				{
-					inputStream.ignore(std::numeric_limits<std::streamsize>::max(), '\n');
-					return true;
-				}
-
-				outToken->push_back(character);
-			}
-
-			return true;
-		}
-
-		bool TryParseInt(const std::string& text, int* outValue)
-		{
-			assert(outValue != nullptr && "outValue must not be null.");
-
-			int value = 0;
-			const char* const begin = text.data();
-			const char* const end = begin + text.size();
-			const std::from_chars_result result = std::from_chars(begin, end, value);
-
-			if (result.ec != std::errc{} || result.ptr != end)
-			{
-				return false;
-			}
-
-			*outValue = value;
-			return true;
-		}
-
-		bool TryReadIntToken(std::istream& inputStream, int* outValue)
-		{
-			assert(outValue != nullptr && "outValue must not be null.");
-
-			std::string token;
-			if (!ReadToken(inputStream, &token))
-			{
-				return false;
-			}
-
-			return TryParseInt(token, outValue);
-		}
-
-		bool TryReadPgmFormat(std::istream& inputStream, EPgmFormat* outPgmFormat)
-		{
-			assert(outPgmFormat != nullptr && "outPgmFormat must not be null.");
-
-			std::string magicNumber;
-			if (!ReadToken(inputStream, &magicNumber))
-			{
-				return false;
-			}
-
-			if (magicNumber == "P2")
-			{
-				*outPgmFormat = EPgmFormat::ASCII;
-				return true;
-			}
-
-			if (magicNumber == "P5")
-			{
-				*outPgmFormat = EPgmFormat::BINARY;
-				return true;
-			}
-
-			return false;
-		}
-
-		bool TryReadPgmHeader(std::istream& inputStream, EPgmFormat* outPgmFormat, int* outWidth, int* outHeight)
-		{
-			assert(outPgmFormat != nullptr && "outPgmFormat must not be null.");
-			assert(outWidth != nullptr && "outWidth must not be null.");
-			assert(outHeight != nullptr && "outHeight must not be null.");
-
-			if (!TryReadPgmFormat(inputStream, outPgmFormat))
-			{
-				return false;
-			}
-
-			if (!TryReadIntToken(inputStream, outWidth))
-			{
-				return false;
-			}
-
-			if (!TryReadIntToken(inputStream, outHeight))
-			{
-				return false;
-			}
-
-			int maxPixelValue = 0;
-			if (!TryReadIntToken(inputStream, &maxPixelValue))
-			{
-				return false;
-			}
-
-			return maxPixelValue == PGM_MAX_PIXEL_VALUE && CanCreatePgmImage(*outWidth, *outHeight);
-		}
-
 		bool TryReadAsciiPixels(std::istream& inputStream, Image* outImage)
 		{
 			assert(outImage != nullptr && "outImage must not be null.");
@@ -217,63 +20,17 @@ namespace minicv
 			{
 				for (int x = 0; x < outImage->GetWidth(); ++x)
 				{
-					int pixelValue = 0;
-					if (!TryReadIntToken(inputStream, &pixelValue) || pixelValue < 0 || pixelValue > PGM_MAX_PIXEL_VALUE)
+					const std::optional<std::uint8_t> pixelValue = TryReadPixelValue(inputStream);
+					if (!pixelValue.has_value())
 					{
 						return false;
 					}
 
-					outImage->GetGrayscalePixel(x, y) = static_cast<std::uint8_t>(pixelValue);
+					outImage->GetGrayscalePixel(x, y) = *pixelValue;
 				}
 			}
 
 			return true;
-		}
-
-		bool TryReadBinaryPixels(std::istream& inputStream, Image* outImage)
-		{
-			assert(outImage != nullptr && "outImage must not be null.");
-
-			const std::size_t byteCount = outImage->GetByteCount();
-			if (byteCount > static_cast<std::size_t>(std::numeric_limits<std::streamsize>::max()))
-			{
-				return false;
-			}
-
-			inputStream.read(reinterpret_cast<char*>(outImage->GetPixelData()), static_cast<std::streamsize>(byteCount));
-			return static_cast<std::size_t>(inputStream.gcount()) == byteCount;
-		}
-
-		bool TryWriteAsciiPixels(std::ostream& outputStream, const Image& image)
-		{
-			for (int y = 0; y < image.GetHeight(); ++y)
-			{
-				for (int x = 0; x < image.GetWidth(); ++x)
-				{
-					if (x > 0)
-					{
-						outputStream << ' ';
-					}
-
-					outputStream << static_cast<int>(image.GetGrayscalePixel(x, y));
-				}
-
-				outputStream << '\n';
-			}
-
-			return outputStream.good();
-		}
-
-		bool TryWriteBinaryPixels(std::ostream& outputStream, const Image& image)
-		{
-			const std::size_t byteCount = image.GetByteCount();
-			if (byteCount > static_cast<std::size_t>(std::numeric_limits<std::streamsize>::max()))
-			{
-				return false;
-			}
-
-			outputStream.write(reinterpret_cast<const char*>(image.GetPixelData()), static_cast<std::streamsize>(byteCount));
-			return outputStream.good();
 		}
 	}
 
@@ -285,44 +42,35 @@ namespace minicv
 			return std::nullopt;
 		}
 
-		EPgmFormat pgmFormat = EPgmFormat::ASCII;
-		int width = 0;
-		int height = 0;
-		if (!TryReadPgmHeader(inputStream, &pgmFormat, &width, &height))
+		const std::optional<NetpbmHeader> header = TryReadNetpbmHeader(inputStream);
+		if (!header.has_value() || !IsPgmFormat(header->Format))
 		{
 			return std::nullopt;
 		}
 
-		std::optional<Image> image = TryCreatePgmImage(width, height);
+		std::optional<Image> image = TryCreateImage(*header);
 		if (!image.has_value())
 		{
 			return std::nullopt;
 		}
 
 		Image& loadedImage = *image;
-		switch (pgmFormat)
+		if (IsAsciiFormat(header->Format))
 		{
-		case EPgmFormat::ASCII:
 			if (!TryReadAsciiPixels(inputStream, &loadedImage))
 			{
 				return std::nullopt;
 			}
-			break;
-		case EPgmFormat::BINARY:
-			if (!TryReadBinaryPixels(inputStream, &loadedImage))
-			{
-				return std::nullopt;
-			}
-			break;
-		default:
-			assert(false && "Unsupported PGM format.");
+		}
+		else if (!TryReadBinaryPixels(inputStream, &loadedImage))
+		{
 			return std::nullopt;
 		}
 
 		return image;
 	}
 
-	bool TrySavePgmImage(const Image& image, const std::filesystem::path& filePath, const EPgmFormat pgmFormat)
+	bool TrySavePgmImage(const Image& image, const std::filesystem::path& filePath)
 	{
 		if (image.GetImageType() != EImageType::UINT8_GRAYSCALE || image.IsEmpty())
 		{
@@ -335,31 +83,11 @@ namespace minicv
 			return false;
 		}
 
-		switch (pgmFormat)
+		if (!TryWriteNetpbmHeader(outputStream, ENetpbmFormat::PGM_BINARY, image))
 		{
-		case EPgmFormat::ASCII:
-			outputStream << "P2\n";
-			break;
-		case EPgmFormat::BINARY:
-			outputStream << "P5\n";
-			break;
-		default:
-			assert(false && "Unsupported PGM format.");
 			return false;
 		}
 
-		outputStream << image.GetWidth() << ' ' << image.GetHeight() << '\n';
-		outputStream << PGM_MAX_PIXEL_VALUE << '\n';
-
-		switch (pgmFormat)
-		{
-		case EPgmFormat::ASCII:
-			return TryWriteAsciiPixels(outputStream, image);
-		case EPgmFormat::BINARY:
-			return TryWriteBinaryPixels(outputStream, image);
-		default:
-			assert(false && "Unsupported PGM format.");
-			return false;
-		}
+		return TryWriteBinaryPixels(outputStream, image);
 	}
 }
