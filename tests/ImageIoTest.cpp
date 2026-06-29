@@ -24,6 +24,18 @@ namespace
 		std::filesystem::remove(filePath, errorCode);
 	}
 
+	void RemoveDirectory(const std::filesystem::path& directoryPath)
+	{
+		std::error_code errorCode;
+		std::filesystem::remove_all(directoryPath, errorCode);
+	}
+
+	void WriteTextFile(const std::filesystem::path& filePath, const char* const text)
+	{
+		std::ofstream outputStream(filePath, std::ios::binary);
+		outputStream << text;
+	}
+
 	std::string ReadMagicNumber(const std::filesystem::path& filePath)
 	{
 		std::ifstream inputStream(filePath, std::ios::binary);
@@ -330,6 +342,73 @@ namespace
 		RemoveFile(ppmFilePath);
 	}
 
+	void TestMissingInputFileFails()
+	{
+		const std::filesystem::path filePath = GetTestFilePath("minicv_missing_input_file.pgm");
+		RemoveFile(filePath);
+
+		assert(!minicv::TryLoadImage(filePath).has_value());
+	}
+
+	void TestMissingOutputDirectoryFails()
+	{
+		const std::filesystem::path directoryPath = GetTestFilePath("minicv_missing_output_directory");
+		const std::filesystem::path filePath = directoryPath / "image.pgm";
+		RemoveDirectory(directoryPath);
+
+		assert(!minicv::TrySaveImage(CreateSampleGrayscaleImage(), filePath));
+		assert(!std::filesystem::exists(filePath));
+	}
+
+	void TestInvalidHeaderValuesFail()
+	{
+		const std::filesystem::path badMagicNumberPath = GetTestFilePath("minicv_bad_magic_number.pgm");
+		const std::filesystem::path invalidWidthPath = GetTestFilePath("minicv_invalid_width.pgm");
+		const std::filesystem::path zeroHeightPath = GetTestFilePath("minicv_zero_height.pgm");
+		const std::filesystem::path unsupportedMaxValuePath = GetTestFilePath("minicv_unsupported_max_value.pgm");
+		RemoveFile(badMagicNumberPath);
+		RemoveFile(invalidWidthPath);
+		RemoveFile(zeroHeightPath);
+		RemoveFile(unsupportedMaxValuePath);
+
+		WriteTextFile(badMagicNumberPath, "P1\n1 1\n255\n0\n");
+		WriteTextFile(invalidWidthPath, "P2\nabc 1\n255\n0\n");
+		WriteTextFile(zeroHeightPath, "P2\n1 0\n255\n0\n");
+		WriteTextFile(unsupportedMaxValuePath, "P2\n1 1\n1023\n0\n");
+
+		assert(!minicv::TryLoadImage(badMagicNumberPath).has_value());
+		assert(!minicv::TryLoadImage(invalidWidthPath).has_value());
+		assert(!minicv::TryLoadImage(zeroHeightPath).has_value());
+		assert(!minicv::TryLoadImage(unsupportedMaxValuePath).has_value());
+
+		RemoveFile(badMagicNumberPath);
+		RemoveFile(invalidWidthPath);
+		RemoveFile(zeroHeightPath);
+		RemoveFile(unsupportedMaxValuePath);
+	}
+
+	void TestInvalidAsciiPixelValuesFail()
+	{
+		const std::filesystem::path negativePixelPath = GetTestFilePath("minicv_negative_pixel.pgm");
+		const std::filesystem::path largePixelPath = GetTestFilePath("minicv_large_pixel.pgm");
+		const std::filesystem::path nonNumericPixelPath = GetTestFilePath("minicv_non_numeric_pixel.ppm");
+		RemoveFile(negativePixelPath);
+		RemoveFile(largePixelPath);
+		RemoveFile(nonNumericPixelPath);
+
+		WriteTextFile(negativePixelPath, "P2\n1 1\n255\n-1\n");
+		WriteTextFile(largePixelPath, "P2\n1 1\n255\n256\n");
+		WriteTextFile(nonNumericPixelPath, "P3\n1 1\n255\n255 green 0\n");
+
+		assert(!minicv::TryLoadImage(negativePixelPath).has_value());
+		assert(!minicv::TryLoadImage(largePixelPath).has_value());
+		assert(!minicv::TryLoadImage(nonNumericPixelPath).has_value());
+
+		RemoveFile(negativePixelPath);
+		RemoveFile(largePixelPath);
+		RemoveFile(nonNumericPixelPath);
+	}
+
 	void TestInvalidImageFilesFail()
 	{
 		const std::filesystem::path pgmFilePath = GetTestFilePath("minicv_invalid_test.pgm");
@@ -401,6 +480,10 @@ void RunImageIoTests()
 	TestUnknownExtensionFails();
 	TestMismatchedSaveExtensionFails();
 	TestMismatchedLoadExtensionFails();
+	TestMissingInputFileFails();
+	TestMissingOutputDirectoryFails();
+	TestInvalidHeaderValuesFail();
+	TestInvalidAsciiPixelValuesFail();
 	TestInvalidImageFilesFail();
 	TestOversizedImageFilesFail();
 }
