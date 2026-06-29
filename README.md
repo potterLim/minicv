@@ -43,6 +43,9 @@ macOS:
 ```sh
 cmake --build --preset macos-debug --target minicv_image_difference_example
 ./out/build/macos/Debug/minicv_image_difference_example
+
+cmake --build --preset macos-debug --target minicv_image_io_round_trip_example
+./out/build/macos/Debug/minicv_image_io_round_trip_example
 ```
 
 Windows MSVC:
@@ -50,6 +53,9 @@ Windows MSVC:
 ```sh
 cmake --build --preset windows-msvc-debug --target minicv_image_difference_example
 .\out\build\windows-msvc\Debug\minicv_image_difference_example.exe
+
+cmake --build --preset windows-msvc-debug --target minicv_image_io_round_trip_example
+.\out\build\windows-msvc\Debug\minicv_image_io_round_trip_example.exe
 ```
 
 ## 빌드 설정
