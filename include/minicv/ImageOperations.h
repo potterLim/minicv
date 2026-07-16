@@ -26,4 +26,8 @@ namespace minicv
 		const Image& redChannelImage,
 		const Image& greenChannelImage,
 		const Image& blueChannelImage);
+
+	[[nodiscard]] Image CreateInvertedImage(const Image& image);
+	[[nodiscard]] Image AdjustImageBrightness(const Image& image, const int brightnessOffset);
+	[[nodiscard]] Image AdjustImageContrast(const Image& image, const float contrastScale);
 }

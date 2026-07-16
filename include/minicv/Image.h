@@ -28,6 +28,8 @@ namespace minicv
 
 		void Fill(const std::uint8_t pixelValue);
 		void FillRgb(const std::uint8_t red, const std::uint8_t green, const std::uint8_t blue);
+		void CopyRegionFrom(const Image& sourceImage, const Rect sourceRegion, const Point destinationPosition);
+		void PasteImage(const Image& sourceImage, const Point destinationPosition);
 
 		[[nodiscard]] bool IsEmpty() const;
 

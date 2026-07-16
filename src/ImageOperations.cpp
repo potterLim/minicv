@@ -1,6 +1,8 @@
 #include <cassert>
+#include <cmath>
 #include <cstddef>
 #include <cstdint>
+#include <limits>
 #include <utility>
 
 #include "minicv/ImageOperations.h"
@@ -54,6 +56,40 @@ namespace minicv
 				GRAYSCALE_ROUNDING_OFFSET;
 
 			return static_cast<std::uint8_t>(weightedSum / GRAYSCALE_WEIGHT_SCALE);
+		}
+
+		std::uint8_t ClampAndRoundToByte(const double pixelValue)
+		{
+			const std::uint8_t minimumByteValue = std::numeric_limits<std::uint8_t>::min();
+			const std::uint8_t maximumByteValue = std::numeric_limits<std::uint8_t>::max();
+
+			if (pixelValue <= static_cast<double>(minimumByteValue))
+			{
+				return minimumByteValue;
+			}
+
+			if (pixelValue >= static_cast<double>(maximumByteValue))
+			{
+				return maximumByteValue;
+			}
+
+			return static_cast<std::uint8_t>(std::lround(pixelValue));
+		}
+
+		Image CreateLinearTransformedImage(const Image& image, const double scale, const double offset)
+		{
+			Image transformedImage(image.GetSize(), image.GetImageType());
+			const std::uint8_t* const sourcePixelData = image.GetPixelData();
+			std::uint8_t* const transformedPixelData = transformedImage.GetPixelData();
+			const std::size_t byteCount = image.GetByteCount();
+
+			for (std::size_t index = 0; index < byteCount; ++index)
+			{
+				const double transformedPixelValue = static_cast<double>(sourcePixelData[index]) * scale + offset;
+				transformedPixelData[index] = ClampAndRoundToByte(transformedPixelValue);
+			}
+
+			return transformedImage;
 		}
 	}
 
@@ -237,5 +273,24 @@ namespace minicv
 		}
 
 		return rgbImage;
+	}
+
+	Image CreateInvertedImage(const Image& image)
+	{
+		const double maximumByteValue = static_cast<double>(std::numeric_limits<std::uint8_t>::max());
+		return CreateLinearTransformedImage(image, -1.0, maximumByteValue);
+	}
+
+	Image AdjustImageBrightness(const Image& image, const int brightnessOffset)
+	{
+		return CreateLinearTransformedImage(image, 1.0, static_cast<double>(brightnessOffset));
+	}
+
+	Image AdjustImageContrast(const Image& image, const float contrastScale)
+	{
+		assert(std::isfinite(contrastScale) && "contrastScale must be finite.");
+		assert(contrastScale >= 0.0f && "contrastScale must not be negative.");
+
+		return CreateLinearTransformedImage(image, static_cast<double>(contrastScale), 0.0);
 	}
 }

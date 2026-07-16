@@ -121,6 +121,48 @@ namespace minicv
 		}
 	}
 
+	void Image::CopyRegionFrom(const Image& sourceImage, const Rect sourceRegion, const Point destinationPosition)
+	{
+		assert(mImageType == sourceImage.mImageType && "image types must match.");
+		assert(sourceImage.Contains(sourceRegion) && "source region must be inside source image.");
+
+		assert(Contains(Rect{ destinationPosition.X, destinationPosition.Y, sourceRegion.Width, sourceRegion.Height }) && "destination region must be inside destination image.");
+
+		if (this == &sourceImage)
+		{
+			const Image copiedRegion = sourceImage.ExtractRegion(sourceRegion);
+			PasteImage(copiedRegion, destinationPosition);
+			return;
+		}
+
+		const std::size_t channelCount = static_cast<std::size_t>(mChannelCount);
+		const std::size_t bytesPerCopiedRow = static_cast<std::size_t>(sourceRegion.Width) * channelCount;
+
+		if (bytesPerCopiedRow == 0)
+		{
+			return;
+		}
+
+		const std::size_t sourceColumnOffset = static_cast<std::size_t>(sourceRegion.X) * channelCount;
+		const std::size_t destinationColumnOffset = static_cast<std::size_t>(destinationPosition.X) * channelCount;
+
+		for (int y = 0; y < sourceRegion.Height; ++y)
+		{
+			const std::size_t sourceRowOffset = static_cast<std::size_t>(sourceRegion.Y + y) * static_cast<std::size_t>(sourceImage.mBytesPerRow);
+			const std::size_t destinationRowOffset = static_cast<std::size_t>(destinationPosition.Y + y) * static_cast<std::size_t>(mBytesPerRow);
+			const std::size_t sourceIndex = sourceRowOffset + sourceColumnOffset;
+			const std::size_t destinationIndex = destinationRowOffset + destinationColumnOffset;
+
+			std::memcpy(mPixels.data() + destinationIndex, sourceImage.mPixels.data() + sourceIndex, bytesPerCopiedRow);
+		}
+	}
+
+	void Image::PasteImage(const Image& sourceImage, const Point destinationPosition)
+	{
+		const Rect sourceRegion{ 0, 0, sourceImage.mWidth, sourceImage.mHeight };
+		CopyRegionFrom(sourceImage, sourceRegion, destinationPosition);
+	}
+
 	bool Image::IsEmpty() const
 	{
 		return mPixels.empty();
