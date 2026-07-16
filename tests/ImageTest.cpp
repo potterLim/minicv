@@ -327,6 +327,88 @@ namespace
 		assert(region.GetHeight() == 0);
 		assert(region.GetImageType() == minicv::EImageType::UINT8_GRAYSCALE);
 	}
+
+	void TestCopyGrayscaleRegion()
+	{
+		minicv::Image sourceImage(4, 3);
+
+		for (int y = 0; y < sourceImage.GetHeight(); ++y)
+		{
+			for (int x = 0; x < sourceImage.GetWidth(); ++x)
+			{
+				sourceImage.GetGrayscalePixel(x, y) = static_cast<std::uint8_t>(y * 10 + x);
+			}
+		}
+
+		minicv::Image destinationImage(5, 4);
+		destinationImage.Fill(200);
+		destinationImage.CopyRegionFrom(sourceImage, minicv::Rect{ 1, 1, 2, 2 }, minicv::Point{ 2, 1 });
+
+		assert(destinationImage.GetGrayscalePixel(2, 1) == 11);
+		assert(destinationImage.GetGrayscalePixel(3, 1) == 12);
+		assert(destinationImage.GetGrayscalePixel(2, 2) == 21);
+		assert(destinationImage.GetGrayscalePixel(3, 2) == 22);
+		assert(destinationImage.GetGrayscalePixel(1, 1) == 200);
+		assert(destinationImage.GetGrayscalePixel(4, 2) == 200);
+		assert(sourceImage.GetGrayscalePixel(1, 1) == 11);
+	}
+
+	void TestPasteRgbImage()
+	{
+		minicv::Image sourceImage(2, 1, minicv::EImageType::UINT8_RGB);
+		sourceImage.GetRgbPixel(0, 0, minicv::ERgbChannel::RED) = 10;
+		sourceImage.GetRgbPixel(0, 0, minicv::ERgbChannel::GREEN) = 20;
+		sourceImage.GetRgbPixel(0, 0, minicv::ERgbChannel::BLUE) = 30;
+		sourceImage.GetRgbPixel(1, 0, minicv::ERgbChannel::RED) = 40;
+		sourceImage.GetRgbPixel(1, 0, minicv::ERgbChannel::GREEN) = 50;
+		sourceImage.GetRgbPixel(1, 0, minicv::ERgbChannel::BLUE) = 60;
+
+		minicv::Image destinationImage(3, 2, minicv::EImageType::UINT8_RGB);
+		destinationImage.FillRgb(1, 2, 3);
+		destinationImage.PasteImage(sourceImage, minicv::Point{ 1, 1 });
+
+		assert(destinationImage.GetRgbPixel(0, 1, minicv::ERgbChannel::RED) == 1);
+		assert(destinationImage.GetRgbPixel(0, 1, minicv::ERgbChannel::GREEN) == 2);
+		assert(destinationImage.GetRgbPixel(0, 1, minicv::ERgbChannel::BLUE) == 3);
+		assert(destinationImage.GetRgbPixel(1, 1, minicv::ERgbChannel::RED) == 10);
+		assert(destinationImage.GetRgbPixel(1, 1, minicv::ERgbChannel::GREEN) == 20);
+		assert(destinationImage.GetRgbPixel(1, 1, minicv::ERgbChannel::BLUE) == 30);
+		assert(destinationImage.GetRgbPixel(2, 1, minicv::ERgbChannel::RED) == 40);
+		assert(destinationImage.GetRgbPixel(2, 1, minicv::ERgbChannel::GREEN) == 50);
+		assert(destinationImage.GetRgbPixel(2, 1, minicv::ERgbChannel::BLUE) == 60);
+	}
+
+	void TestCopyOverlappingRegion()
+	{
+		minicv::Image image(5, 1);
+		image.GetGrayscalePixel(0, 0) = 10;
+		image.GetGrayscalePixel(1, 0) = 20;
+		image.GetGrayscalePixel(2, 0) = 30;
+		image.GetGrayscalePixel(3, 0) = 40;
+		image.GetGrayscalePixel(4, 0) = 50;
+
+		image.CopyRegionFrom(image, minicv::Rect{ 0, 0, 4, 1 }, minicv::Point{ 1, 0 });
+
+		assert(image.GetGrayscalePixel(0, 0) == 10);
+		assert(image.GetGrayscalePixel(1, 0) == 10);
+		assert(image.GetGrayscalePixel(2, 0) == 20);
+		assert(image.GetGrayscalePixel(3, 0) == 30);
+		assert(image.GetGrayscalePixel(4, 0) == 40);
+	}
+
+	void TestPasteEmptyImage()
+	{
+		minicv::Image image(2, 2);
+		image.Fill(42);
+
+		const minicv::Image originalImage = image.Clone();
+		const minicv::Image emptyImage;
+		image.PasteImage(emptyImage, minicv::Point{ 2, 2 });
+
+		assert(image.HasSameContent(originalImage));
+
+		(void)originalImage;
+	}
 }
 
 void RunImageTests()
@@ -349,4 +431,8 @@ void RunImageTests()
 	TestExtractGrayscaleRegion();
 	TestExtractRgbRegion();
 	TestExtractEmptyRegion();
+	TestCopyGrayscaleRegion();
+	TestPasteRgbImage();
+	TestCopyOverlappingRegion();
+	TestPasteEmptyImage();
 }

@@ -329,6 +329,117 @@ namespace
 		assert(mergedImage.HasSameContent(rgbImage));
 	}
 
+	void TestCreateInvertedImage()
+	{
+		minicv::Image image(3, 1);
+		image.GetGrayscalePixel(0, 0) = 0;
+		image.GetGrayscalePixel(1, 0) = 127;
+		image.GetGrayscalePixel(2, 0) = 255;
+
+		const minicv::Image invertedImage = minicv::CreateInvertedImage(image);
+
+		assert(invertedImage.GetImageType() == minicv::EImageType::UINT8_GRAYSCALE);
+		assert(invertedImage.GetGrayscalePixel(0, 0) == 255);
+		assert(invertedImage.GetGrayscalePixel(1, 0) == 128);
+		assert(invertedImage.GetGrayscalePixel(2, 0) == 0);
+		assert(image.GetGrayscalePixel(1, 0) == 127);
+
+		(void)invertedImage;
+	}
+
+	void TestAdjustImageBrightness()
+	{
+		minicv::Image image(4, 1);
+		image.GetGrayscalePixel(0, 0) = 0;
+		image.GetGrayscalePixel(1, 0) = 10;
+		image.GetGrayscalePixel(2, 0) = 240;
+		image.GetGrayscalePixel(3, 0) = 255;
+
+		const minicv::Image brighterImage = minicv::AdjustImageBrightness(image, 20);
+		const minicv::Image darkerImage = minicv::AdjustImageBrightness(image, -20);
+
+		assert(brighterImage.GetGrayscalePixel(0, 0) == 20);
+		assert(brighterImage.GetGrayscalePixel(1, 0) == 30);
+		assert(brighterImage.GetGrayscalePixel(2, 0) == 255);
+		assert(brighterImage.GetGrayscalePixel(3, 0) == 255);
+
+		assert(darkerImage.GetGrayscalePixel(0, 0) == 0);
+		assert(darkerImage.GetGrayscalePixel(1, 0) == 0);
+		assert(darkerImage.GetGrayscalePixel(2, 0) == 220);
+		assert(darkerImage.GetGrayscalePixel(3, 0) == 235);
+
+		assert(image.GetGrayscalePixel(2, 0) == 240);
+
+		(void)brighterImage;
+		(void)darkerImage;
+	}
+
+	void TestAdjustImageContrast()
+	{
+		minicv::Image image(5, 1);
+		image.GetGrayscalePixel(0, 0) = 0;
+		image.GetGrayscalePixel(1, 0) = 1;
+		image.GetGrayscalePixel(2, 0) = 127;
+		image.GetGrayscalePixel(3, 0) = 200;
+		image.GetGrayscalePixel(4, 0) = 255;
+
+		const minicv::Image identityImage = minicv::AdjustImageContrast(image, 1.0f);
+		const minicv::Image increasedContrastImage = minicv::AdjustImageContrast(image, 1.5f);
+		const minicv::Image zeroContrastImage = minicv::AdjustImageContrast(image, 0.0f);
+
+		assert(identityImage.HasSameContent(image));
+		assert(increasedContrastImage.GetGrayscalePixel(0, 0) == 0);
+		assert(increasedContrastImage.GetGrayscalePixel(1, 0) == 2);
+		assert(increasedContrastImage.GetGrayscalePixel(2, 0) == 191);
+		assert(increasedContrastImage.GetGrayscalePixel(3, 0) == 255);
+		assert(increasedContrastImage.GetGrayscalePixel(4, 0) == 255);
+
+		for (int x = 0; x < zeroContrastImage.GetWidth(); ++x)
+		{
+			assert(zeroContrastImage.GetGrayscalePixel(x, 0) == 0);
+		}
+
+		(void)identityImage;
+		(void)increasedContrastImage;
+		(void)zeroContrastImage;
+	}
+
+	void TestPixelValueOperationsWithRgbImage()
+	{
+		minicv::Image image(1, 1, minicv::EImageType::UINT8_RGB);
+		SetRgbPixel(image, 0, 0, 10, 100, 250);
+
+		const minicv::Image invertedImage = minicv::CreateInvertedImage(image);
+		const minicv::Image brighterImage = minicv::AdjustImageBrightness(image, 20);
+		const minicv::Image increasedContrastImage = minicv::AdjustImageContrast(image, 1.5f);
+
+		AssertRgbPixelEquals(invertedImage, 0, 0, 245, 155, 5);
+		AssertRgbPixelEquals(brighterImage, 0, 0, 30, 120, 255);
+		AssertRgbPixelEquals(increasedContrastImage, 0, 0, 15, 150, 255);
+		AssertRgbPixelEquals(image, 0, 0, 10, 100, 250);
+	}
+
+	void TestPixelValueOperationsFromEmptyImages()
+	{
+		const minicv::Image emptyGrayscaleImage;
+		const minicv::Image emptyRgbImage(0, 0, minicv::EImageType::UINT8_RGB);
+
+		const minicv::Image invertedImage = minicv::CreateInvertedImage(emptyGrayscaleImage);
+		const minicv::Image brighterImage = minicv::AdjustImageBrightness(emptyRgbImage, 20);
+		const minicv::Image contrastImage = minicv::AdjustImageContrast(emptyRgbImage, 1.5f);
+
+		assert(invertedImage.IsEmpty());
+		assert(invertedImage.GetImageType() == minicv::EImageType::UINT8_GRAYSCALE);
+		assert(brighterImage.IsEmpty());
+		assert(brighterImage.GetImageType() == minicv::EImageType::UINT8_RGB);
+		assert(contrastImage.IsEmpty());
+		assert(contrastImage.GetImageType() == minicv::EImageType::UINT8_RGB);
+
+		(void)invertedImage;
+		(void)brighterImage;
+		(void)contrastImage;
+	}
+
 	void TestColorAndChannelOperationsFromEmptyImages()
 	{
 		const minicv::Image emptyRgbImage(0, 0, minicv::EImageType::UINT8_RGB);
@@ -380,5 +491,10 @@ void RunImageOperationsTests()
 	TestSplitRgbChannelsWithSourceAsOutput();
 	TestMergeRgbChannels();
 	TestSplitAndMergeRgbChannels();
+	TestCreateInvertedImage();
+	TestAdjustImageBrightness();
+	TestAdjustImageContrast();
+	TestPixelValueOperationsWithRgbImage();
+	TestPixelValueOperationsFromEmptyImages();
 	TestColorAndChannelOperationsFromEmptyImages();
 }
