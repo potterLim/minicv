@@ -90,11 +90,20 @@ if(MINICV_BUILD_EXAMPLES)
         examples/ImageDifferenceExample.cpp
     )
 
+    add_executable(minicv_histogram_example
+        examples/HistogramExample.cpp
+    )
+
     add_executable(minicv_image_io_round_trip_example
         examples/ImageIoRoundTripExample.cpp
     )
 
     target_link_libraries(minicv_image_difference_example
+        PRIVATE
+            miniCV::miniCV
+    )
+
+    target_link_libraries(minicv_histogram_example
         PRIVATE
             miniCV::miniCV
     )
@@ -105,5 +114,6 @@ if(MINICV_BUILD_EXAMPLES)
     )
 
     minicv_enable_warnings(minicv_image_difference_example)
+    minicv_enable_warnings(minicv_histogram_example)
     minicv_enable_warnings(minicv_image_io_round_trip_example)
 endif()
