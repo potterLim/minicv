@@ -1,5 +1,7 @@
 #include <cassert>
+#include <cstddef>
 #include <cstdint>
+#include <optional>
 
 #include "ImageOperationsTest.h"
 #include "minicv/Image.h"
@@ -39,6 +41,32 @@ namespace
 		(void)isRedEqual;
 		(void)isGreenEqual;
 		(void)isBlueEqual;
+	}
+
+	void AssertHistogramBinCount(
+		const minicv::GrayscaleHistogram& histogram,
+		const std::uint8_t pixelValue,
+		const std::size_t expectedBinCount)
+	{
+		const std::size_t binIndex = static_cast<std::size_t>(pixelValue);
+		const bool isBinCountEqual = histogram.BinCounts[binIndex] == expectedBinCount;
+
+		assert(isBinCountEqual);
+
+		(void)isBinCountEqual;
+	}
+
+	void AssertCumulativeDistributionValue(
+		const minicv::GrayscaleCumulativeDistribution& cumulativeDistribution,
+		const std::uint8_t pixelValue,
+		const double expectedValue)
+	{
+		const std::size_t binIndex = static_cast<std::size_t>(pixelValue);
+		const bool isValueEqual = cumulativeDistribution.Values[binIndex] == expectedValue;
+
+		assert(isValueEqual);
+
+		(void)isValueEqual;
 	}
 
 	void TestCreateAbsoluteDifferenceImage()
@@ -440,6 +468,148 @@ namespace
 		(void)contrastImage;
 	}
 
+	void TestCalculateGrayscaleHistogram()
+	{
+		minicv::Image image(7, 1);
+		image.GetGrayscalePixel(0, 0) = 0;
+		image.GetGrayscalePixel(1, 0) = 0;
+		image.GetGrayscalePixel(2, 0) = 1;
+		image.GetGrayscalePixel(3, 0) = 127;
+		image.GetGrayscalePixel(4, 0) = 255;
+		image.GetGrayscalePixel(5, 0) = 255;
+		image.GetGrayscalePixel(6, 0) = 255;
+
+		const minicv::GrayscaleHistogram histogram = minicv::CalculateGrayscaleHistogram(image);
+
+		AssertHistogramBinCount(histogram, 0, 2);
+		AssertHistogramBinCount(histogram, 1, 1);
+		AssertHistogramBinCount(histogram, 2, 0);
+		AssertHistogramBinCount(histogram, 127, 1);
+		AssertHistogramBinCount(histogram, 255, 3);
+
+		std::size_t totalPixelCount = 0;
+		for (const std::size_t binCount : histogram.BinCounts)
+		{
+			totalPixelCount += binCount;
+		}
+
+		assert(totalPixelCount == image.GetPixelCount());
+
+		(void)totalPixelCount;
+	}
+
+	void TestCalculateGrayscaleHistogramFromEmptyImage()
+	{
+		const minicv::Image image;
+		const minicv::GrayscaleHistogram histogram = minicv::CalculateGrayscaleHistogram(image);
+
+		for (const std::size_t binCount : histogram.BinCounts)
+		{
+			const bool isBinEmpty = binCount == 0;
+			assert(isBinEmpty);
+			(void)isBinEmpty;
+		}
+	}
+
+	void TestCalculateGrayscaleCumulativeDistribution()
+	{
+		minicv::GrayscaleHistogram histogram{};
+		histogram.BinCounts[0] = 1;
+		histogram.BinCounts[1] = 1;
+		histogram.BinCounts[255] = 2;
+
+		const minicv::GrayscaleCumulativeDistribution cumulativeDistribution = minicv::CalculateGrayscaleCumulativeDistribution(histogram);
+
+		AssertCumulativeDistributionValue(cumulativeDistribution, 0, 0.25);
+		AssertCumulativeDistributionValue(cumulativeDistribution, 1, 0.5);
+		AssertCumulativeDistributionValue(cumulativeDistribution, 127, 0.5);
+		AssertCumulativeDistributionValue(cumulativeDistribution, 254, 0.5);
+		AssertCumulativeDistributionValue(cumulativeDistribution, 255, 1.0);
+	}
+
+	void TestCalculateGrayscaleCumulativeDistributionFromEmptyHistogram()
+	{
+		const minicv::GrayscaleHistogram histogram{};
+		const minicv::GrayscaleCumulativeDistribution cumulativeDistribution = minicv::CalculateGrayscaleCumulativeDistribution(histogram);
+
+		for (const double cumulativeValue : cumulativeDistribution.Values)
+		{
+			const bool isValueZero = cumulativeValue == 0.0;
+			assert(isValueZero);
+			(void)isValueZero;
+		}
+	}
+
+	void TestTryGetGrayscaleValueRange()
+	{
+		minicv::Image image(4, 1);
+		image.GetGrayscalePixel(0, 0) = 200;
+		image.GetGrayscalePixel(1, 0) = 10;
+		image.GetGrayscalePixel(2, 0) = 90;
+		image.GetGrayscalePixel(3, 0) = 255;
+
+		const std::optional<minicv::GrayscaleValueRange> valueRange = minicv::TryGetGrayscaleValueRange(image);
+		const std::optional<minicv::GrayscaleValueRange> emptyValueRange = minicv::TryGetGrayscaleValueRange(minicv::Image{});
+
+		assert(valueRange.has_value());
+		assert(valueRange->Minimum == 10);
+		assert(valueRange->Maximum == 255);
+		assert(!emptyValueRange.has_value());
+
+		(void)valueRange;
+		(void)emptyValueRange;
+	}
+
+	void TestCreateMinMaxNormalizedGrayscaleImage()
+	{
+		minicv::Image image(5, 1);
+		image.GetGrayscalePixel(0, 0) = 10;
+		image.GetGrayscalePixel(1, 0) = 12;
+		image.GetGrayscalePixel(2, 0) = 15;
+		image.GetGrayscalePixel(3, 0) = 18;
+		image.GetGrayscalePixel(4, 0) = 20;
+
+		const minicv::Image normalizedImage = minicv::CreateMinMaxNormalizedGrayscaleImage(image);
+
+		assert(normalizedImage.GetImageType() == minicv::EImageType::UINT8_GRAYSCALE);
+		assert(normalizedImage.GetSize().Width == image.GetSize().Width);
+		assert(normalizedImage.GetSize().Height == image.GetSize().Height);
+		assert(normalizedImage.GetGrayscalePixel(0, 0) == 0);
+		assert(normalizedImage.GetGrayscalePixel(1, 0) == 51);
+		assert(normalizedImage.GetGrayscalePixel(2, 0) == 128);
+		assert(normalizedImage.GetGrayscalePixel(3, 0) == 204);
+		assert(normalizedImage.GetGrayscalePixel(4, 0) == 255);
+		assert(image.GetGrayscalePixel(2, 0) == 15);
+
+		(void)normalizedImage;
+	}
+
+	void TestCreateMinMaxNormalizedGrayscaleImageFromConstantImage()
+	{
+		minicv::Image image(3, 1);
+		image.Fill(42);
+
+		const minicv::Image normalizedImage = minicv::CreateMinMaxNormalizedGrayscaleImage(image);
+
+		for (std::size_t pixelIndex = 0; pixelIndex < normalizedImage.GetPixelCount(); ++pixelIndex)
+		{
+			const bool isPixelZero = normalizedImage.GetPixelData()[pixelIndex] == 0;
+			assert(isPixelZero);
+			(void)isPixelZero;
+		}
+	}
+
+	void TestCreateMinMaxNormalizedGrayscaleImageFromEmptyImage()
+	{
+		const minicv::Image image;
+		const minicv::Image normalizedImage = minicv::CreateMinMaxNormalizedGrayscaleImage(image);
+
+		assert(normalizedImage.IsEmpty());
+		assert(normalizedImage.GetImageType() == minicv::EImageType::UINT8_GRAYSCALE);
+
+		(void)normalizedImage;
+	}
+
 	void TestColorAndChannelOperationsFromEmptyImages()
 	{
 		const minicv::Image emptyRgbImage(0, 0, minicv::EImageType::UINT8_RGB);
@@ -496,5 +666,13 @@ void RunImageOperationsTests()
 	TestAdjustImageContrast();
 	TestPixelValueOperationsWithRgbImage();
 	TestPixelValueOperationsFromEmptyImages();
+	TestCalculateGrayscaleHistogram();
+	TestCalculateGrayscaleHistogramFromEmptyImage();
+	TestCalculateGrayscaleCumulativeDistribution();
+	TestCalculateGrayscaleCumulativeDistributionFromEmptyHistogram();
+	TestTryGetGrayscaleValueRange();
+	TestCreateMinMaxNormalizedGrayscaleImage();
+	TestCreateMinMaxNormalizedGrayscaleImageFromConstantImage();
+	TestCreateMinMaxNormalizedGrayscaleImageFromEmptyImage();
 	TestColorAndChannelOperationsFromEmptyImages();
 }
