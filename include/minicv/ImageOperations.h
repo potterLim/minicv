@@ -2,8 +2,12 @@
 
 #include <cstddef>
 #include <cstdint>
+#include <optional>
 
 #include "minicv/ERgbChannel.h"
+#include "minicv/GrayscaleCumulativeDistribution.h"
+#include "minicv/GrayscaleHistogram.h"
+#include "minicv/GrayscaleValueRange.h"
 #include "minicv/Image.h"
 
 namespace minicv
@@ -30,4 +34,9 @@ namespace minicv
 	[[nodiscard]] Image CreateInvertedImage(const Image& image);
 	[[nodiscard]] Image AdjustImageBrightness(const Image& image, const int brightnessOffset);
 	[[nodiscard]] Image AdjustImageContrast(const Image& image, const float contrastScale);
+
+	[[nodiscard]] GrayscaleHistogram CalculateGrayscaleHistogram(const Image& grayscaleImage);
+	[[nodiscard]] GrayscaleCumulativeDistribution CalculateGrayscaleCumulativeDistribution(const GrayscaleHistogram& histogram);
+	[[nodiscard]] std::optional<GrayscaleValueRange> TryGetGrayscaleValueRange(const Image& grayscaleImage);
+	[[nodiscard]] Image CreateMinMaxNormalizedGrayscaleImage(const Image& grayscaleImage);
 }

@@ -3,6 +3,7 @@
 #include <cstddef>
 #include <cstdint>
 #include <limits>
+#include <optional>
 #include <utility>
 
 #include "minicv/ImageOperations.h"
@@ -90,6 +91,22 @@ namespace minicv
 			}
 
 			return transformedImage;
+		}
+
+		std::uint8_t NormalizeGrayscalePixel(
+			const std::uint8_t pixelValue,
+			const std::uint8_t minimumValue,
+			const std::uint8_t maximumValue)
+		{
+			const int valueRange = static_cast<int>(maximumValue) - static_cast<int>(minimumValue);
+			assert(valueRange > 0 && "grayscale value range must be positive.");
+
+			const int shiftedPixelValue = static_cast<int>(pixelValue) - static_cast<int>(minimumValue);
+			const int normalizedMaximum = static_cast<int>(std::numeric_limits<std::uint8_t>::max());
+			const int scaledPixelValue = shiftedPixelValue * normalizedMaximum;
+			const int roundingOffset = valueRange / 2;
+
+			return static_cast<std::uint8_t>((scaledPixelValue + roundingOffset) / valueRange);
 		}
 	}
 
@@ -292,5 +309,104 @@ namespace minicv
 		assert(contrastScale >= 0.0f && "contrastScale must not be negative.");
 
 		return CreateLinearTransformedImage(image, static_cast<double>(contrastScale), 0.0);
+	}
+
+	GrayscaleHistogram CalculateGrayscaleHistogram(const Image& grayscaleImage)
+	{
+		assert(grayscaleImage.GetImageType() == EImageType::UINT8_GRAYSCALE && "image type must be UINT8_GRAYSCALE.");
+
+		GrayscaleHistogram histogram{};
+		const std::uint8_t* const pixelData = grayscaleImage.GetPixelData();
+		const std::size_t pixelCount = grayscaleImage.GetPixelCount();
+
+		for (std::size_t pixelIndex = 0; pixelIndex < pixelCount; ++pixelIndex)
+		{
+			const std::size_t binIndex = static_cast<std::size_t>(pixelData[pixelIndex]);
+			++histogram.BinCounts[binIndex];
+		}
+
+		return histogram;
+	}
+
+	GrayscaleCumulativeDistribution CalculateGrayscaleCumulativeDistribution(const GrayscaleHistogram& histogram)
+	{
+		GrayscaleCumulativeDistribution cumulativeDistribution{};
+		long double totalPixelCount = 0.0L;
+
+		for (const std::size_t binCount : histogram.BinCounts)
+		{
+			totalPixelCount += static_cast<long double>(binCount);
+		}
+
+		if (totalPixelCount == 0.0L)
+		{
+			return cumulativeDistribution;
+		}
+
+		long double cumulativePixelCount = 0.0L;
+
+		for (std::size_t binIndex = 0; binIndex < histogram.BinCounts.size(); ++binIndex)
+		{
+			cumulativePixelCount += static_cast<long double>(histogram.BinCounts[binIndex]);
+			cumulativeDistribution.Values[binIndex] = static_cast<double>(cumulativePixelCount / totalPixelCount);
+		}
+
+		return cumulativeDistribution;
+	}
+
+	std::optional<GrayscaleValueRange> TryGetGrayscaleValueRange(const Image& grayscaleImage)
+	{
+		assert(grayscaleImage.GetImageType() == EImageType::UINT8_GRAYSCALE && "image type must be UINT8_GRAYSCALE.");
+
+		if (grayscaleImage.IsEmpty())
+		{
+			return std::nullopt;
+		}
+
+		const std::uint8_t* const pixelData = grayscaleImage.GetPixelData();
+		const std::size_t pixelCount = grayscaleImage.GetPixelCount();
+		std::uint8_t minimumValue = pixelData[0];
+		std::uint8_t maximumValue = pixelData[0];
+
+		for (std::size_t pixelIndex = 1; pixelIndex < pixelCount; ++pixelIndex)
+		{
+			const std::uint8_t pixelValue = pixelData[pixelIndex];
+
+			if (pixelValue < minimumValue)
+			{
+				minimumValue = pixelValue;
+			}
+
+			if (pixelValue > maximumValue)
+			{
+				maximumValue = pixelValue;
+			}
+		}
+
+		return GrayscaleValueRange{ minimumValue, maximumValue };
+	}
+
+	Image CreateMinMaxNormalizedGrayscaleImage(const Image& grayscaleImage)
+	{
+		assert(grayscaleImage.GetImageType() == EImageType::UINT8_GRAYSCALE && "image type must be UINT8_GRAYSCALE.");
+
+		Image normalizedImage(grayscaleImage.GetSize(), EImageType::UINT8_GRAYSCALE);
+		const std::optional<GrayscaleValueRange> valueRange = TryGetGrayscaleValueRange(grayscaleImage);
+
+		if (!valueRange.has_value() || valueRange->Minimum == valueRange->Maximum)
+		{
+			return normalizedImage;
+		}
+
+		const std::uint8_t* const sourcePixelData = grayscaleImage.GetPixelData();
+		std::uint8_t* const normalizedPixelData = normalizedImage.GetPixelData();
+		const std::size_t pixelCount = grayscaleImage.GetPixelCount();
+
+		for (std::size_t pixelIndex = 0; pixelIndex < pixelCount; ++pixelIndex)
+		{
+			normalizedPixelData[pixelIndex] = NormalizeGrayscalePixel(sourcePixelData[pixelIndex], valueRange->Minimum, valueRange->Maximum);
+		}
+
+		return normalizedImage;
 	}
 }
