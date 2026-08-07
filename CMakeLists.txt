@@ -21,8 +21,10 @@ add_library(miniCV STATIC
     include/minicv/ImageOperations.h
     include/minicv/EImageType.h
     include/minicv/ERgbChannel.h
+    include/minicv/EThresholdType.h
     include/minicv/GrayscaleCumulativeDistribution.h
     include/minicv/GrayscaleHistogram.h
+    include/minicv/GrayscaleThresholdParameters.h
     include/minicv/GrayscaleValueRange.h
     include/minicv/Point.h
     include/minicv/Rect.h

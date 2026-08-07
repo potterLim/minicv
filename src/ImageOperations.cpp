@@ -1,3 +1,4 @@
+#include <array>
 #include <cassert>
 #include <cmath>
 #include <cstddef>
@@ -101,12 +102,86 @@ namespace minicv
 			const int valueRange = static_cast<int>(maximumValue) - static_cast<int>(minimumValue);
 			assert(valueRange > 0 && "grayscale value range must be positive.");
 
+			if (pixelValue <= minimumValue)
+			{
+				return std::numeric_limits<std::uint8_t>::min();
+			}
+
+			if (pixelValue >= maximumValue)
+			{
+				return std::numeric_limits<std::uint8_t>::max();
+			}
+
 			const int shiftedPixelValue = static_cast<int>(pixelValue) - static_cast<int>(minimumValue);
 			const int normalizedMaximum = static_cast<int>(std::numeric_limits<std::uint8_t>::max());
 			const int scaledPixelValue = shiftedPixelValue * normalizedMaximum;
 			const int roundingOffset = valueRange / 2;
 
 			return static_cast<std::uint8_t>((scaledPixelValue + roundingOffset) / valueRange);
+		}
+
+		std::size_t GetFirstPopulatedHistogramBinIndex(const GrayscaleHistogram& histogram)
+		{
+			for (std::size_t binIndex = 0; binIndex < histogram.BinCounts.size(); ++binIndex)
+			{
+				if (histogram.BinCounts[binIndex] > 0)
+				{
+					return binIndex;
+				}
+			}
+
+			assert(false && "histogram must contain at least one pixel.");
+			return 0;
+		}
+
+		std::array<std::uint8_t, GRAYSCALE_HISTOGRAM_BIN_COUNT> CreateHistogramEqualizationLookupTable(
+			const GrayscaleHistogram& histogram,
+			const GrayscaleCumulativeDistribution& cumulativeDistribution)
+		{
+			std::array<std::uint8_t, GRAYSCALE_HISTOGRAM_BIN_COUNT> lookupTable{};
+			const std::size_t firstPopulatedBinIndex = GetFirstPopulatedHistogramBinIndex(histogram);
+			const double minimumCumulativeValue = cumulativeDistribution.Values[firstPopulatedBinIndex];
+			const double remainingCumulativeRange = 1.0 - minimumCumulativeValue;
+
+			assert(remainingCumulativeRange > 0.0 && "histogram must contain more than one distinct pixel value.");
+
+			const double maximumByteValue = static_cast<double>(std::numeric_limits<std::uint8_t>::max());
+
+			for (std::size_t binIndex = 0; binIndex < lookupTable.size(); ++binIndex)
+			{
+				const double shiftedCumulativeValue = cumulativeDistribution.Values[binIndex] - minimumCumulativeValue;
+				const double equalizedPixelValue = shiftedCumulativeValue / remainingCumulativeRange * maximumByteValue;
+				lookupTable[binIndex] = ClampAndRoundToByte(equalizedPixelValue);
+			}
+
+			return lookupTable;
+		}
+
+		std::uint8_t ApplyGrayscaleThreshold(const std::uint8_t pixelValue, const GrayscaleThresholdParameters thresholdParameters)
+		{
+			const bool isAboveThreshold = pixelValue > thresholdParameters.ThresholdValue;
+
+			switch (thresholdParameters.ThresholdType)
+			{
+			case EThresholdType::BINARY:
+				return isAboveThreshold ? thresholdParameters.MaximumValue : 0;
+
+			case EThresholdType::BINARY_INVERTED:
+				return isAboveThreshold ? 0 : thresholdParameters.MaximumValue;
+
+			case EThresholdType::TRUNCATE:
+				return isAboveThreshold ? thresholdParameters.ThresholdValue : pixelValue;
+
+			case EThresholdType::TO_ZERO:
+				return isAboveThreshold ? pixelValue : 0;
+
+			case EThresholdType::TO_ZERO_INVERTED:
+				return isAboveThreshold ? 0 : pixelValue;
+
+			default:
+				assert(false && "unsupported threshold type.");
+				return 0;
+			}
 		}
 	}
 
@@ -408,5 +483,73 @@ namespace minicv
 		}
 
 		return normalizedImage;
+	}
+
+	Image CreateContrastStretchedGrayscaleImage(const Image& grayscaleImage, const GrayscaleValueRange valueRange)
+	{
+		assert(grayscaleImage.GetImageType() == EImageType::UINT8_GRAYSCALE && "image type must be UINT8_GRAYSCALE.");
+		assert(valueRange.Minimum < valueRange.Maximum && "valueRange must have a positive range.");
+
+		Image stretchedImage(grayscaleImage.GetSize(), EImageType::UINT8_GRAYSCALE);
+		const std::uint8_t* const sourcePixelData = grayscaleImage.GetPixelData();
+		std::uint8_t* const stretchedPixelData = stretchedImage.GetPixelData();
+		const std::size_t pixelCount = grayscaleImage.GetPixelCount();
+
+		for (std::size_t pixelIndex = 0; pixelIndex < pixelCount; ++pixelIndex)
+		{
+			stretchedPixelData[pixelIndex] = NormalizeGrayscalePixel(sourcePixelData[pixelIndex], valueRange.Minimum, valueRange.Maximum);
+		}
+
+		return stretchedImage;
+	}
+
+	Image CreateHistogramEqualizedGrayscaleImage(const Image& grayscaleImage)
+	{
+		assert(grayscaleImage.GetImageType() == EImageType::UINT8_GRAYSCALE && "image type must be UINT8_GRAYSCALE.");
+
+		if (grayscaleImage.IsEmpty())
+		{
+			return Image(grayscaleImage.GetSize(), EImageType::UINT8_GRAYSCALE);
+		}
+
+		const GrayscaleHistogram histogram = CalculateGrayscaleHistogram(grayscaleImage);
+		const std::size_t firstPopulatedBinIndex = GetFirstPopulatedHistogramBinIndex(histogram);
+
+		if (histogram.BinCounts[firstPopulatedBinIndex] == grayscaleImage.GetPixelCount())
+		{
+			return grayscaleImage.Clone();
+		}
+
+		const GrayscaleCumulativeDistribution cumulativeDistribution = CalculateGrayscaleCumulativeDistribution(histogram);
+		const std::array<std::uint8_t, GRAYSCALE_HISTOGRAM_BIN_COUNT> lookupTable = CreateHistogramEqualizationLookupTable(histogram, cumulativeDistribution);
+		Image equalizedImage(grayscaleImage.GetSize(), EImageType::UINT8_GRAYSCALE);
+		const std::uint8_t* const sourcePixelData = grayscaleImage.GetPixelData();
+		std::uint8_t* const equalizedPixelData = equalizedImage.GetPixelData();
+		const std::size_t pixelCount = grayscaleImage.GetPixelCount();
+
+		for (std::size_t pixelIndex = 0; pixelIndex < pixelCount; ++pixelIndex)
+		{
+			const std::size_t lookupIndex = static_cast<std::size_t>(sourcePixelData[pixelIndex]);
+			equalizedPixelData[pixelIndex] = lookupTable[lookupIndex];
+		}
+
+		return equalizedImage;
+	}
+
+	Image CreateThresholdedGrayscaleImage(const Image& grayscaleImage, const GrayscaleThresholdParameters thresholdParameters)
+	{
+		assert(grayscaleImage.GetImageType() == EImageType::UINT8_GRAYSCALE && "image type must be UINT8_GRAYSCALE.");
+
+		Image thresholdedImage(grayscaleImage.GetSize(), EImageType::UINT8_GRAYSCALE);
+		const std::uint8_t* const sourcePixelData = grayscaleImage.GetPixelData();
+		std::uint8_t* const thresholdedPixelData = thresholdedImage.GetPixelData();
+		const std::size_t pixelCount = grayscaleImage.GetPixelCount();
+
+		for (std::size_t pixelIndex = 0; pixelIndex < pixelCount; ++pixelIndex)
+		{
+			thresholdedPixelData[pixelIndex] = ApplyGrayscaleThreshold(sourcePixelData[pixelIndex], thresholdParameters);
+		}
+
+		return thresholdedImage;
 	}
 }

@@ -7,6 +7,7 @@
 #include "minicv/ERgbChannel.h"
 #include "minicv/GrayscaleCumulativeDistribution.h"
 #include "minicv/GrayscaleHistogram.h"
+#include "minicv/GrayscaleThresholdParameters.h"
 #include "minicv/GrayscaleValueRange.h"
 #include "minicv/Image.h"
 
@@ -39,4 +40,8 @@ namespace minicv
 	[[nodiscard]] GrayscaleCumulativeDistribution CalculateGrayscaleCumulativeDistribution(const GrayscaleHistogram& histogram);
 	[[nodiscard]] std::optional<GrayscaleValueRange> TryGetGrayscaleValueRange(const Image& grayscaleImage);
 	[[nodiscard]] Image CreateMinMaxNormalizedGrayscaleImage(const Image& grayscaleImage);
+
+	[[nodiscard]] Image CreateContrastStretchedGrayscaleImage(const Image& grayscaleImage, const GrayscaleValueRange valueRange);
+	[[nodiscard]] Image CreateHistogramEqualizedGrayscaleImage(const Image& grayscaleImage);
+	[[nodiscard]] Image CreateThresholdedGrayscaleImage(const Image& grayscaleImage, const GrayscaleThresholdParameters thresholdParameters);
 }
