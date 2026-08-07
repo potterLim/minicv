@@ -1,3 +1,4 @@
+#include <array>
 #include <cassert>
 #include <cstddef>
 #include <cstdint>
@@ -86,6 +87,31 @@ namespace
 			(void)isNonDecreasing;
 
 			previousValue = cumulativeValue;
+		}
+	}
+
+	template <std::size_t PIXEL_COUNT>
+	void AssertGrayscaleRowEquals(
+		const minicv::Image& image,
+		const std::array<std::uint8_t, PIXEL_COUNT>& expectedPixelValues)
+	{
+		const bool isWidthEqual = image.GetWidth() == static_cast<int>(PIXEL_COUNT);
+		const bool isHeightEqual = image.GetHeight() == 1;
+
+		assert(isWidthEqual);
+		assert(isHeightEqual);
+
+		(void)isWidthEqual;
+		(void)isHeightEqual;
+
+		for (std::size_t pixelIndex = 0; pixelIndex < PIXEL_COUNT; ++pixelIndex)
+		{
+			const int x = static_cast<int>(pixelIndex);
+			const bool isPixelEqual = image.GetGrayscalePixel(x, 0) == expectedPixelValues[pixelIndex];
+
+			assert(isPixelEqual);
+
+			(void)isPixelEqual;
 		}
 	}
 
@@ -705,6 +731,107 @@ namespace
 		(void)normalizedValueRange;
 	}
 
+	void TestCreateContrastStretchedGrayscaleImage()
+	{
+		minicv::Image image(6, 1);
+		image.GetGrayscalePixel(0, 0) = 10;
+		image.GetGrayscalePixel(1, 0) = 50;
+		image.GetGrayscalePixel(2, 0) = 100;
+		image.GetGrayscalePixel(3, 0) = 150;
+		image.GetGrayscalePixel(4, 0) = 200;
+		image.GetGrayscalePixel(5, 0) = 250;
+
+		const minicv::GrayscaleValueRange valueRange{ 50, 200 };
+		const minicv::Image stretchedImage = minicv::CreateContrastStretchedGrayscaleImage(image, valueRange);
+		const std::array<std::uint8_t, 6> expectedPixelValues{ 0, 0, 85, 170, 255, 255 };
+
+		AssertGrayscaleRowEquals(stretchedImage, expectedPixelValues);
+		assert(stretchedImage.GetImageType() == minicv::EImageType::UINT8_GRAYSCALE);
+		assert(image.GetGrayscalePixel(2, 0) == 100);
+
+		(void)stretchedImage;
+	}
+
+	void TestCreateHistogramEqualizedGrayscaleImage()
+	{
+		minicv::Image image(4, 1);
+		image.GetGrayscalePixel(0, 0) = 50;
+		image.GetGrayscalePixel(1, 0) = 50;
+		image.GetGrayscalePixel(2, 0) = 100;
+		image.GetGrayscalePixel(3, 0) = 150;
+
+		const minicv::Image equalizedImage = minicv::CreateHistogramEqualizedGrayscaleImage(image);
+		const std::array<std::uint8_t, 4> expectedPixelValues{ 0, 0, 128, 255 };
+
+		AssertGrayscaleRowEquals(equalizedImage, expectedPixelValues);
+		assert(equalizedImage.GetImageType() == minicv::EImageType::UINT8_GRAYSCALE);
+		assert(image.GetGrayscalePixel(2, 0) == 100);
+
+		(void)equalizedImage;
+	}
+
+	void TestCreateHistogramEqualizedGrayscaleImageFromConstantImage()
+	{
+		minicv::Image image(3, 1);
+		image.Fill(42);
+
+		const minicv::Image equalizedImage = minicv::CreateHistogramEqualizedGrayscaleImage(image);
+
+		assert(equalizedImage.HasSameContent(image));
+
+		(void)equalizedImage;
+	}
+
+	void TestCreateThresholdedGrayscaleImages()
+	{
+		minicv::Image image(3, 1);
+		image.GetGrayscalePixel(0, 0) = 50;
+		image.GetGrayscalePixel(1, 0) = 100;
+		image.GetGrayscalePixel(2, 0) = 150;
+
+		const minicv::GrayscaleThresholdParameters binaryParameters{ minicv::EThresholdType::BINARY, 100, 200 };
+		const minicv::GrayscaleThresholdParameters invertedBinaryParameters{ minicv::EThresholdType::BINARY_INVERTED, 100, 200 };
+		const minicv::GrayscaleThresholdParameters truncateParameters{ minicv::EThresholdType::TRUNCATE, 100, 200 };
+		const minicv::GrayscaleThresholdParameters toZeroParameters{ minicv::EThresholdType::TO_ZERO, 100, 200 };
+		const minicv::GrayscaleThresholdParameters invertedToZeroParameters{ minicv::EThresholdType::TO_ZERO_INVERTED, 100, 200 };
+
+		const minicv::Image binaryImage = minicv::CreateThresholdedGrayscaleImage(image, binaryParameters);
+		const minicv::Image invertedBinaryImage = minicv::CreateThresholdedGrayscaleImage(image, invertedBinaryParameters);
+		const minicv::Image truncatedImage = minicv::CreateThresholdedGrayscaleImage(image, truncateParameters);
+		const minicv::Image toZeroImage = minicv::CreateThresholdedGrayscaleImage(image, toZeroParameters);
+		const minicv::Image invertedToZeroImage = minicv::CreateThresholdedGrayscaleImage(image, invertedToZeroParameters);
+
+		AssertGrayscaleRowEquals(binaryImage, std::array<std::uint8_t, 3>{ 0, 0, 200 });
+		AssertGrayscaleRowEquals(invertedBinaryImage, std::array<std::uint8_t, 3>{ 200, 200, 0 });
+		AssertGrayscaleRowEquals(truncatedImage, std::array<std::uint8_t, 3>{ 50, 100, 100 });
+		AssertGrayscaleRowEquals(toZeroImage, std::array<std::uint8_t, 3>{ 0, 0, 150 });
+		AssertGrayscaleRowEquals(invertedToZeroImage, std::array<std::uint8_t, 3>{ 50, 100, 0 });
+
+		assert(image.GetGrayscalePixel(2, 0) == 150);
+	}
+
+	void TestGrayscaleContrastAndThresholdOperationsFromEmptyImages()
+	{
+		const minicv::Image emptyImage;
+		const minicv::GrayscaleValueRange valueRange{ 50, 200 };
+		const minicv::GrayscaleThresholdParameters thresholdParameters{ minicv::EThresholdType::BINARY, 100, 255 };
+
+		const minicv::Image stretchedImage = minicv::CreateContrastStretchedGrayscaleImage(emptyImage, valueRange);
+		const minicv::Image equalizedImage = minicv::CreateHistogramEqualizedGrayscaleImage(emptyImage);
+		const minicv::Image thresholdedImage = minicv::CreateThresholdedGrayscaleImage(emptyImage, thresholdParameters);
+
+		assert(stretchedImage.IsEmpty());
+		assert(equalizedImage.IsEmpty());
+		assert(thresholdedImage.IsEmpty());
+		assert(stretchedImage.GetImageType() == minicv::EImageType::UINT8_GRAYSCALE);
+		assert(equalizedImage.GetImageType() == minicv::EImageType::UINT8_GRAYSCALE);
+		assert(thresholdedImage.GetImageType() == minicv::EImageType::UINT8_GRAYSCALE);
+
+		(void)stretchedImage;
+		(void)equalizedImage;
+		(void)thresholdedImage;
+	}
+
 	void TestColorAndChannelOperationsFromEmptyImages()
 	{
 		const minicv::Image emptyRgbImage(0, 0, minicv::EImageType::UINT8_RGB);
@@ -771,5 +898,10 @@ void RunImageOperationsTests()
 	TestCreateMinMaxNormalizedGrayscaleImageFromConstantImage();
 	TestCreateMinMaxNormalizedGrayscaleImageFromEmptyImage();
 	TestGrayscaleHistogramAndNormalizationFlow();
+	TestCreateContrastStretchedGrayscaleImage();
+	TestCreateHistogramEqualizedGrayscaleImage();
+	TestCreateHistogramEqualizedGrayscaleImageFromConstantImage();
+	TestCreateThresholdedGrayscaleImages();
+	TestGrayscaleContrastAndThresholdOperationsFromEmptyImages();
 	TestColorAndChannelOperationsFromEmptyImages();
 }
