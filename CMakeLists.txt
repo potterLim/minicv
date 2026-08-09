@@ -68,6 +68,8 @@ if(MINICV_BUILD_TESTS)
     if(BUILD_TESTING)
         add_executable(minicv_tests
             tests/main.cpp
+            tests/GrayscaleIntegralImageTest.cpp
+            tests/GrayscaleIntegralImageTest.h
             tests/ImageIoTest.cpp
             tests/ImageIoTest.h
             tests/ImageOperationsTest.cpp

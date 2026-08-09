@@ -832,6 +832,115 @@ namespace
 		(void)thresholdedImage;
 	}
 
+	void TestTryCalculateOtsuThreshold()
+	{
+		minicv::Image image(4, 1);
+		image.GetGrayscalePixel(0, 0) = 0;
+		image.GetGrayscalePixel(1, 0) = 50;
+		image.GetGrayscalePixel(2, 0) = 200;
+		image.GetGrayscalePixel(3, 0) = 255;
+
+		const std::optional<std::uint8_t> otsuThreshold = minicv::TryCalculateOtsuThreshold(image);
+
+		assert(otsuThreshold.has_value());
+		assert(*otsuThreshold == 50);
+
+		const minicv::GrayscaleThresholdParameters thresholdParameters{ minicv::EThresholdType::BINARY, *otsuThreshold, 255 };
+		const minicv::Image thresholdedImage = minicv::CreateThresholdedGrayscaleImage(image, thresholdParameters);
+
+		AssertGrayscaleRowEquals(thresholdedImage, std::array<std::uint8_t, 4>{ 0, 0, 255, 255 });
+		assert(image.GetGrayscalePixel(2, 0) == 200);
+	}
+
+	void TestTryCalculateOtsuThresholdFromConstantAndEmptyImages()
+	{
+		minicv::Image constantImage(3, 1);
+		constantImage.Fill(42);
+
+		const std::optional<std::uint8_t> constantImageThreshold = minicv::TryCalculateOtsuThreshold(constantImage);
+		const std::optional<std::uint8_t> emptyImageThreshold = minicv::TryCalculateOtsuThreshold(minicv::Image{});
+
+		assert(constantImageThreshold.has_value());
+		assert(*constantImageThreshold == 0);
+		assert(!emptyImageThreshold.has_value());
+
+		(void)constantImageThreshold;
+		(void)emptyImageThreshold;
+	}
+
+	void TestCreateAdaptiveMeanThresholdedGrayscaleImages()
+	{
+		minicv::Image image(3, 3);
+		image.Fill(10);
+		image.GetGrayscalePixel(1, 1) = 200;
+
+		const minicv::GrayscaleAdaptiveThresholdParameters binaryParameters{ minicv::EThresholdType::BINARY, 200, 3, 0.0 };
+		const minicv::GrayscaleAdaptiveThresholdParameters invertedBinaryParameters{ minicv::EThresholdType::BINARY_INVERTED, 200, 3, 0.0 };
+		const minicv::Image binaryImage = minicv::CreateAdaptiveMeanThresholdedGrayscaleImage(image, binaryParameters);
+		const minicv::Image invertedBinaryImage = minicv::CreateAdaptiveMeanThresholdedGrayscaleImage(image, invertedBinaryParameters);
+
+		for (int y = 0; y < image.GetHeight(); ++y)
+		{
+			for (int x = 0; x < image.GetWidth(); ++x)
+			{
+				const bool isCenterPixel = x == 1 && y == 1;
+				const std::uint8_t expectedBinaryValue = isCenterPixel ? 200 : 0;
+				const std::uint8_t expectedInvertedBinaryValue = isCenterPixel ? 0 : 200;
+
+				assert(binaryImage.GetGrayscalePixel(x, y) == expectedBinaryValue);
+				assert(invertedBinaryImage.GetGrayscalePixel(x, y) == expectedInvertedBinaryValue);
+
+				(void)expectedBinaryValue;
+				(void)expectedInvertedBinaryValue;
+			}
+		}
+
+		assert(image.GetGrayscalePixel(1, 1) == 200);
+	}
+
+	void TestCreateAdaptiveMeanThresholdedGrayscaleImageWithMeanOffset()
+	{
+		minicv::Image image(1, 1);
+		image.GetGrayscalePixel(0, 0) = 100;
+
+		const minicv::GrayscaleAdaptiveThresholdParameters zeroOffsetParameters{ minicv::EThresholdType::BINARY, 255, 3, 0.0 };
+		const minicv::GrayscaleAdaptiveThresholdParameters positiveOffsetParameters{ minicv::EThresholdType::BINARY, 255, 3, 1.0 };
+
+		const minicv::Image zeroOffsetImage = minicv::CreateAdaptiveMeanThresholdedGrayscaleImage(image, zeroOffsetParameters);
+		const minicv::Image positiveOffsetImage = minicv::CreateAdaptiveMeanThresholdedGrayscaleImage(image, positiveOffsetParameters);
+
+		assert(zeroOffsetImage.GetGrayscalePixel(0, 0) == 0);
+		assert(positiveOffsetImage.GetGrayscalePixel(0, 0) == 255);
+	}
+
+	void TestCreateAdaptiveMeanThresholdedGrayscaleImageAtClippedBoundary()
+	{
+		minicv::Image image(3, 3);
+		image.Fill(0);
+		image.GetGrayscalePixel(0, 0) = 50;
+		image.GetGrayscalePixel(1, 0) = 100;
+		image.GetGrayscalePixel(0, 1) = 100;
+		image.GetGrayscalePixel(1, 1) = 100;
+
+		const minicv::GrayscaleAdaptiveThresholdParameters thresholdParameters{ minicv::EThresholdType::BINARY, 255, 3, 0.0 };
+		const minicv::Image thresholdedImage = minicv::CreateAdaptiveMeanThresholdedGrayscaleImage(image, thresholdParameters);
+
+		assert(thresholdedImage.GetGrayscalePixel(0, 0) == 0);
+	}
+
+	void TestCreateAdaptiveMeanThresholdedGrayscaleImageFromEmptyImage()
+	{
+		const minicv::Image emptyImage;
+		const minicv::GrayscaleAdaptiveThresholdParameters thresholdParameters{ minicv::EThresholdType::BINARY, 255, 3, 0.0 };
+
+		const minicv::Image thresholdedImage = minicv::CreateAdaptiveMeanThresholdedGrayscaleImage(emptyImage, thresholdParameters);
+
+		assert(thresholdedImage.IsEmpty());
+		assert(thresholdedImage.GetImageType() == minicv::EImageType::UINT8_GRAYSCALE);
+
+		(void)thresholdedImage;
+	}
+
 	void TestColorAndChannelOperationsFromEmptyImages()
 	{
 		const minicv::Image emptyRgbImage(0, 0, minicv::EImageType::UINT8_RGB);
@@ -903,5 +1012,11 @@ void RunImageOperationsTests()
 	TestCreateHistogramEqualizedGrayscaleImageFromConstantImage();
 	TestCreateThresholdedGrayscaleImages();
 	TestGrayscaleContrastAndThresholdOperationsFromEmptyImages();
+	TestTryCalculateOtsuThreshold();
+	TestTryCalculateOtsuThresholdFromConstantAndEmptyImages();
+	TestCreateAdaptiveMeanThresholdedGrayscaleImages();
+	TestCreateAdaptiveMeanThresholdedGrayscaleImageWithMeanOffset();
+	TestCreateAdaptiveMeanThresholdedGrayscaleImageAtClippedBoundary();
+	TestCreateAdaptiveMeanThresholdedGrayscaleImageFromEmptyImage();
 	TestColorAndChannelOperationsFromEmptyImages();
 }
