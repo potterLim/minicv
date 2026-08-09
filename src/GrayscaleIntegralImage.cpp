@@ -4,6 +4,7 @@
 #include <limits>
 
 #include "minicv/GrayscaleIntegralImage.h"
+#include "minicv/Image.h"
 
 namespace minicv
 {

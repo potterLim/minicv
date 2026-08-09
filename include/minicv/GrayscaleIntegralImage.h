@@ -4,12 +4,13 @@
 #include <cstdint>
 #include <vector>
 
-#include "minicv/Image.h"
 #include "minicv/Rect.h"
 #include "minicv/Size.h"
 
 namespace minicv
 {
+	class Image;
+
 	class GrayscaleIntegralImage
 	{
 	public:

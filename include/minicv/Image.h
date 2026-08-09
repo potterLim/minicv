@@ -18,7 +18,7 @@ namespace minicv
 		Image();
 		Image(const int width, const int height);
 		Image(const int width, const int height, const EImageType imageType);
-		Image(const Size size);
+		explicit Image(const Size size);
 		Image(const Size size, const EImageType imageType);
 
 		void Create(const int width, const int height);
