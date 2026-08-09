@@ -5,6 +5,7 @@
 #include <optional>
 
 #include "minicv/ERgbChannel.h"
+#include "minicv/GrayscaleAdaptiveThresholdParameters.h"
 #include "minicv/GrayscaleCumulativeDistribution.h"
 #include "minicv/GrayscaleHistogram.h"
 #include "minicv/GrayscaleThresholdParameters.h"
@@ -44,4 +45,7 @@ namespace minicv
 	[[nodiscard]] Image CreateContrastStretchedGrayscaleImage(const Image& grayscaleImage, const GrayscaleValueRange valueRange);
 	[[nodiscard]] Image CreateHistogramEqualizedGrayscaleImage(const Image& grayscaleImage);
 	[[nodiscard]] Image CreateThresholdedGrayscaleImage(const Image& grayscaleImage, const GrayscaleThresholdParameters thresholdParameters);
+
+	[[nodiscard]] std::optional<std::uint8_t> TryCalculateOtsuThreshold(const Image& grayscaleImage);
+	[[nodiscard]] Image CreateAdaptiveMeanThresholdedGrayscaleImage(const Image& grayscaleImage, const GrayscaleAdaptiveThresholdParameters thresholdParameters);
 }

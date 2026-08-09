@@ -7,6 +7,7 @@ project(miniCV
 )
 
 add_library(miniCV STATIC
+    src/GrayscaleIntegralImage.cpp
     src/Image.cpp
     src/ImageIo.cpp
     src/ImageOperations.cpp
@@ -22,8 +23,10 @@ add_library(miniCV STATIC
     include/minicv/EImageType.h
     include/minicv/ERgbChannel.h
     include/minicv/EThresholdType.h
+    include/minicv/GrayscaleAdaptiveThresholdParameters.h
     include/minicv/GrayscaleCumulativeDistribution.h
     include/minicv/GrayscaleHistogram.h
+    include/minicv/GrayscaleIntegralImage.h
     include/minicv/GrayscaleThresholdParameters.h
     include/minicv/GrayscaleValueRange.h
     include/minicv/Point.h

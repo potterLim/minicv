@@ -7,6 +7,7 @@
 #include <optional>
 #include <utility>
 
+#include "minicv/GrayscaleIntegralImage.h"
 #include "minicv/ImageOperations.h"
 
 namespace minicv
@@ -157,6 +158,27 @@ namespace minicv
 			return lookupTable;
 		}
 
+		bool IsBinaryThresholdType(const EThresholdType thresholdType)
+		{
+			return thresholdType == EThresholdType::BINARY || thresholdType == EThresholdType::BINARY_INVERTED;
+		}
+
+		std::uint8_t ApplyBinaryThreshold(const bool isAboveThreshold, const EThresholdType thresholdType, const std::uint8_t maximumValue)
+		{
+			switch (thresholdType)
+			{
+			case EThresholdType::BINARY:
+				return isAboveThreshold ? maximumValue : 0;
+
+			case EThresholdType::BINARY_INVERTED:
+				return isAboveThreshold ? 0 : maximumValue;
+
+			default:
+				assert(false && "threshold type must be BINARY or BINARY_INVERTED.");
+				return 0;
+			}
+		}
+
 		std::uint8_t ApplyGrayscaleThreshold(const std::uint8_t pixelValue, const GrayscaleThresholdParameters thresholdParameters)
 		{
 			const bool isAboveThreshold = pixelValue > thresholdParameters.ThresholdValue;
@@ -164,10 +186,8 @@ namespace minicv
 			switch (thresholdParameters.ThresholdType)
 			{
 			case EThresholdType::BINARY:
-				return isAboveThreshold ? thresholdParameters.MaximumValue : 0;
-
 			case EThresholdType::BINARY_INVERTED:
-				return isAboveThreshold ? 0 : thresholdParameters.MaximumValue;
+				return ApplyBinaryThreshold(isAboveThreshold, thresholdParameters.ThresholdType, thresholdParameters.MaximumValue);
 
 			case EThresholdType::TRUNCATE:
 				return isAboveThreshold ? thresholdParameters.ThresholdValue : pixelValue;
@@ -182,6 +202,21 @@ namespace minicv
 				assert(false && "unsupported threshold type.");
 				return 0;
 			}
+		}
+
+		Rect CreateClippedNeighborhoodRegion(const int x, const int y, const int blockRadius, const Size imageSize)
+		{
+			const std::int64_t leftCandidate = static_cast<std::int64_t>(x) - blockRadius;
+			const std::int64_t topCandidate = static_cast<std::int64_t>(y) - blockRadius;
+			const std::int64_t rightCandidate = static_cast<std::int64_t>(x) + blockRadius + 1;
+			const std::int64_t bottomCandidate = static_cast<std::int64_t>(y) + blockRadius + 1;
+
+			const int left = leftCandidate > 0 ? static_cast<int>(leftCandidate) : 0;
+			const int top = topCandidate > 0 ? static_cast<int>(topCandidate) : 0;
+			const int right = rightCandidate < imageSize.Width ? static_cast<int>(rightCandidate) : imageSize.Width;
+			const int bottom = bottomCandidate < imageSize.Height ? static_cast<int>(bottomCandidate) : imageSize.Height;
+
+			return Rect{ left, top, right - left, bottom - top };
 		}
 	}
 
@@ -548,6 +583,103 @@ namespace minicv
 		for (std::size_t pixelIndex = 0; pixelIndex < pixelCount; ++pixelIndex)
 		{
 			thresholdedPixelData[pixelIndex] = ApplyGrayscaleThreshold(sourcePixelData[pixelIndex], thresholdParameters);
+		}
+
+		return thresholdedImage;
+	}
+
+	std::optional<std::uint8_t> TryCalculateOtsuThreshold(const Image& grayscaleImage)
+	{
+		assert(grayscaleImage.GetImageType() == EImageType::UINT8_GRAYSCALE && "image type must be UINT8_GRAYSCALE.");
+
+		if (grayscaleImage.IsEmpty())
+		{
+			return std::nullopt;
+		}
+
+		const GrayscaleHistogram histogram = CalculateGrayscaleHistogram(grayscaleImage);
+		const long double totalPixelCount = static_cast<long double>(grayscaleImage.GetPixelCount());
+		long double totalWeightedPixelValue = 0.0L;
+
+		for (std::size_t binIndex = 0; binIndex < histogram.BinCounts.size(); ++binIndex)
+		{
+			totalWeightedPixelValue += static_cast<long double>(binIndex) * static_cast<long double>(histogram.BinCounts[binIndex]);
+		}
+
+		long double backgroundPixelCount = 0.0L;
+		long double backgroundWeightedPixelValue = 0.0L;
+		long double maximumBetweenClassVariance = -1.0L;
+		std::uint8_t otsuThreshold = 0;
+
+		for (std::size_t binIndex = 0; binIndex < histogram.BinCounts.size(); ++binIndex)
+		{
+			const long double binCount = static_cast<long double>(histogram.BinCounts[binIndex]);
+			backgroundPixelCount += binCount;
+			backgroundWeightedPixelValue += static_cast<long double>(binIndex) * binCount;
+
+			if (backgroundPixelCount == 0.0L)
+			{
+				continue;
+			}
+
+			const long double foregroundPixelCount = totalPixelCount - backgroundPixelCount;
+			if (foregroundPixelCount == 0.0L)
+			{
+				break;
+			}
+
+			const long double backgroundMean = backgroundWeightedPixelValue / backgroundPixelCount;
+			const long double foregroundWeightedPixelValue = totalWeightedPixelValue - backgroundWeightedPixelValue;
+			const long double foregroundMean = foregroundWeightedPixelValue / foregroundPixelCount;
+			const long double meanDifference = backgroundMean - foregroundMean;
+			const long double betweenClassVariance = backgroundPixelCount * foregroundPixelCount * meanDifference * meanDifference;
+
+			if (betweenClassVariance > maximumBetweenClassVariance)
+			{
+				maximumBetweenClassVariance = betweenClassVariance;
+				otsuThreshold = static_cast<std::uint8_t>(binIndex);
+			}
+		}
+
+		return otsuThreshold;
+	}
+
+	Image CreateAdaptiveMeanThresholdedGrayscaleImage(const Image& grayscaleImage, const GrayscaleAdaptiveThresholdParameters thresholdParameters)
+	{
+		assert(grayscaleImage.GetImageType() == EImageType::UINT8_GRAYSCALE && "image type must be UINT8_GRAYSCALE.");
+
+		const bool isBinaryThresholdType = IsBinaryThresholdType(thresholdParameters.ThresholdType);
+		assert(isBinaryThresholdType && "threshold type must be BINARY or BINARY_INVERTED.");
+		assert(thresholdParameters.BlockSize >= 3 && "block size must be at least 3.");
+		assert(thresholdParameters.BlockSize % 2 == 1 && "block size must be odd.");
+		assert(std::isfinite(thresholdParameters.MeanOffset) && "mean offset must be finite.");
+
+		(void)isBinaryThresholdType;
+
+		Image thresholdedImage(grayscaleImage.GetSize(), EImageType::UINT8_GRAYSCALE);
+		if (grayscaleImage.IsEmpty())
+		{
+			return thresholdedImage;
+		}
+
+		const GrayscaleIntegralImage integralImage(grayscaleImage);
+		const int blockRadius = thresholdParameters.BlockSize / 2;
+		const Size imageSize = grayscaleImage.GetSize();
+
+		for (int y = 0; y < imageSize.Height; ++y)
+		{
+			for (int x = 0; x < imageSize.Width; ++x)
+			{
+				const Rect neighborhoodRegion = CreateClippedNeighborhoodRegion(x, y, blockRadius, imageSize);
+				const std::uint64_t neighborhoodPixelSum = integralImage.GetRegionSum(neighborhoodRegion);
+				const std::size_t neighborhoodPixelCount = static_cast<std::size_t>(neighborhoodRegion.Width) * static_cast<std::size_t>(neighborhoodRegion.Height);
+				const long double neighborhoodMean = static_cast<long double>(neighborhoodPixelSum) / static_cast<long double>(neighborhoodPixelCount);
+				const long double localThreshold = neighborhoodMean - static_cast<long double>(thresholdParameters.MeanOffset);
+				const std::uint8_t pixelValue = grayscaleImage.GetGrayscalePixel(x, y);
+				const bool isAboveThreshold = static_cast<long double>(pixelValue) > localThreshold;
+
+				thresholdedImage.GetGrayscalePixel(x, y) = ApplyBinaryThreshold(isAboveThreshold, thresholdParameters.ThresholdType, thresholdParameters.MaximumValue);
+			}
 		}
 
 		return thresholdedImage;
