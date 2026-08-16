@@ -7,8 +7,10 @@ project(miniCV
 )
 
 add_library(miniCV STATIC
+    src/ConvolutionKernel.cpp
     src/GrayscaleIntegralImage.cpp
     src/Image.cpp
+    src/ImageFiltering.cpp
     src/ImageIo.cpp
     src/ImageOperations.cpp
     src/NetpbmImageIo.cpp
@@ -17,9 +19,13 @@ add_library(miniCV STATIC
     src/PgmImageIo.h
     src/PpmImageIo.cpp
     src/PpmImageIo.h
+    include/minicv/ConvolutionKernel.h
     include/minicv/Image.h
+    include/minicv/ImageBorderParameters.h
+    include/minicv/ImageFiltering.h
     include/minicv/ImageIo.h
     include/minicv/ImageOperations.h
+    include/minicv/EBorderType.h
     include/minicv/EImageType.h
     include/minicv/ERgbChannel.h
     include/minicv/EThresholdType.h
