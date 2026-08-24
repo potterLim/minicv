@@ -915,17 +915,20 @@ namespace
 
 	void TestCreateAdaptiveMeanThresholdedGrayscaleImageAtClippedBoundary()
 	{
-		minicv::Image image(3, 3);
-		image.Fill(0);
-		image.GetGrayscalePixel(0, 0) = 50;
-		image.GetGrayscalePixel(1, 0) = 100;
-		image.GetGrayscalePixel(0, 1) = 100;
-		image.GetGrayscalePixel(1, 1) = 100;
+		minicv::Image image(2, 2);
+		image.GetGrayscalePixel(0, 0) = 10;
+		image.GetGrayscalePixel(1, 0) = 20;
+		image.GetGrayscalePixel(0, 1) = 30;
+		image.GetGrayscalePixel(1, 1) = 200;
 
 		const minicv::GrayscaleAdaptiveThresholdParameters thresholdParameters{ minicv::EThresholdType::BINARY, 255, 3, 0.0 };
 		const minicv::Image thresholdedImage = minicv::CreateAdaptiveMeanThresholdedGrayscaleImage(image, thresholdParameters);
 
 		assert(thresholdedImage.GetGrayscalePixel(0, 0) == 0);
+		assert(thresholdedImage.GetGrayscalePixel(1, 0) == 0);
+		assert(thresholdedImage.GetGrayscalePixel(0, 1) == 0);
+		assert(thresholdedImage.GetGrayscalePixel(1, 1) == 255);
+		assert(image.GetGrayscalePixel(1, 1) == 200);
 	}
 
 	void TestCreateAdaptiveMeanThresholdedGrayscaleImageFromEmptyImage()

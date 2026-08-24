@@ -119,6 +119,34 @@ namespace
 		assert(convolvedImage.GetRgbPixel(0, 0, minicv::ERgbChannel::BLUE) == 60);
 	}
 
+	void TestReplicateBorderHandlesTwoDimensionalCorners()
+	{
+		minicv::Image image(2, 2);
+		SetGrayscalePixels(image, std::array<std::uint8_t, 4>{ 1, 2, 3, 4 });
+
+		const minicv::ConvolutionKernel kernel(minicv::Size{ 3, 3 }, std::vector<double>(9, 1.0));
+		const minicv::ImageBorderParameters borderParameters{ minicv::EBorderType::REPLICATE, 0 };
+		const minicv::Image convolvedImage = minicv::CreateConvolvedImage(image, kernel, borderParameters);
+
+		AssertGrayscalePixelsEqual(convolvedImage, std::array<std::uint8_t, 4>{ 18, 21, 24, 27 });
+	}
+
+	void TestConstantBorderProcessesRgbChannelsIndependently()
+	{
+		minicv::Image image(1, 1, minicv::EImageType::UINT8_RGB);
+		image.GetRgbPixel(0, 0, minicv::ERgbChannel::RED) = 10;
+		image.GetRgbPixel(0, 0, minicv::ERgbChannel::GREEN) = 20;
+		image.GetRgbPixel(0, 0, minicv::ERgbChannel::BLUE) = 30;
+
+		const minicv::ConvolutionKernel kernel(minicv::Size{ 3, 3 }, std::vector<double>(9, 1.0));
+		const minicv::ImageBorderParameters borderParameters{ minicv::EBorderType::CONSTANT, 5 };
+		const minicv::Image convolvedImage = minicv::CreateConvolvedImage(image, kernel, borderParameters);
+
+		assert(convolvedImage.GetRgbPixel(0, 0, minicv::ERgbChannel::RED) == 50);
+		assert(convolvedImage.GetRgbPixel(0, 0, minicv::ERgbChannel::GREEN) == 60);
+		assert(convolvedImage.GetRgbPixel(0, 0, minicv::ERgbChannel::BLUE) == 70);
+	}
+
 	void TestConvolutionPreservesEmptyImageShape()
 	{
 		const minicv::Image image(0, 3, minicv::EImageType::UINT8_RGB);
@@ -140,5 +168,7 @@ void RunImageFilteringTests()
 	TestConstantAndReplicateBordersProduceExpectedValues();
 	TestConvolutionClampsAndRoundsPixelValues();
 	TestConvolutionProcessesRgbChannelsIndependently();
+	TestReplicateBorderHandlesTwoDimensionalCorners();
+	TestConstantBorderProcessesRgbChannelsIndependently();
 	TestConvolutionPreservesEmptyImageShape();
 }
