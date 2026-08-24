@@ -49,6 +49,9 @@ cmake --build --preset macos-debug --target minicv_histogram_example
 
 cmake --build --preset macos-debug --target minicv_image_io_round_trip_example
 ./out/build/macos/Debug/minicv_image_io_round_trip_example
+
+cmake --build --preset macos-debug --target minicv_threshold_and_convolution_example
+./out/build/macos/Debug/minicv_threshold_and_convolution_example
 ```
 
 Windows MSVC:
@@ -62,6 +65,9 @@ cmake --build --preset windows-msvc-debug --target minicv_histogram_example
 
 cmake --build --preset windows-msvc-debug --target minicv_image_io_round_trip_example
 .\out\build\windows-msvc\Debug\minicv_image_io_round_trip_example.exe
+
+cmake --build --preset windows-msvc-debug --target minicv_threshold_and_convolution_example
+.\out\build\windows-msvc\Debug\minicv_threshold_and_convolution_example.exe
 ```
 
 ## 빌드 설정
