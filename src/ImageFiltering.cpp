@@ -3,6 +3,8 @@
 #include <cstddef>
 #include <cstdint>
 #include <limits>
+#include <utility>
+#include <vector>
 
 #include "minicv/ConvolutionKernel.h"
 #include "minicv/ImageFiltering.h"
@@ -11,9 +13,49 @@ namespace minicv
 {
 	namespace
 	{
+		constexpr std::size_t GRAYSCALE_CHANNEL_INDEX = 0;
+
 		bool IsSupportedBorderType(const EBorderType borderType)
 		{
 			return borderType == EBorderType::CONSTANT || borderType == EBorderType::REPLICATE;
+		}
+
+		std::size_t CalculateKernelCoefficientCount(const Size kernelSize)
+		{
+			assert(kernelSize.Width > 0 && "kernel width must be positive.");
+			assert(kernelSize.Height > 0 && "kernel height must be positive.");
+			assert(kernelSize.Width % 2 == 1 && "kernel width must be odd.");
+			assert(kernelSize.Height % 2 == 1 && "kernel height must be odd.");
+
+			const std::size_t kernelWidth = static_cast<std::size_t>(kernelSize.Width);
+			const std::size_t kernelHeight = static_cast<std::size_t>(kernelSize.Height);
+
+			assert(kernelWidth <= std::numeric_limits<std::size_t>::max() / kernelHeight && "kernel coefficient count overflow.");
+
+			return kernelWidth * kernelHeight;
+		}
+
+		std::vector<double> CreateKernelCoefficientBuffer(const std::size_t coefficientCount)
+		{
+			std::vector<double> coefficients;
+			assert(coefficientCount <= coefficients.max_size() && "kernel coefficient count exceeds maximum vector size.");
+
+			coefficients.resize(coefficientCount);
+			return coefficients;
+		}
+
+		ConvolutionKernel CreateSharpeningKernel()
+		{
+			return ConvolutionKernel(
+				Size{ 3, 3 },
+				std::vector<double>{ 0.0, -1.0, 0.0, -1.0, 5.0, -1.0, 0.0, -1.0, 0.0 });
+		}
+
+		ConvolutionKernel CreateLaplacianKernel()
+		{
+			return ConvolutionKernel(
+				Size{ 3, 3 },
+				std::vector<double>{ 0.0, 1.0, 0.0, 1.0, -4.0, 1.0, 0.0, 1.0, 0.0 });
 		}
 
 		bool IsInsideImage(const Image& image, const std::int64_t x, const std::int64_t y)
@@ -169,5 +211,115 @@ namespace minicv
 		}
 
 		return convolvedImage;
+	}
+
+	Image CreateBoxBlurredImage(const Image& image, const Size kernelSize, const ImageBorderParameters borderParameters)
+	{
+		const std::size_t coefficientCount = CalculateKernelCoefficientCount(kernelSize);
+		const double coefficient = 1.0 / static_cast<double>(coefficientCount);
+		std::vector<double> coefficients = CreateKernelCoefficientBuffer(coefficientCount);
+
+		for (double& currentCoefficient : coefficients)
+		{
+			currentCoefficient = coefficient;
+		}
+
+		const ConvolutionKernel boxKernel(kernelSize, std::move(coefficients));
+		return CreateConvolvedImage(image, boxKernel, borderParameters);
+	}
+
+	ConvolutionKernel CreateGaussianKernel(const Size kernelSize, const double standardDeviation)
+	{
+		const bool isStandardDeviationFinite = std::isfinite(standardDeviation);
+		assert(isStandardDeviationFinite && "standard deviation must be finite.");
+		assert(standardDeviation > 0.0 && "standard deviation must be positive.");
+
+		(void)isStandardDeviationFinite;
+
+		const std::size_t coefficientCount = CalculateKernelCoefficientCount(kernelSize);
+		std::vector<double> coefficients = CreateKernelCoefficientBuffer(coefficientCount);
+		const int kernelCenterX = kernelSize.Width / 2;
+		const int kernelCenterY = kernelSize.Height / 2;
+		double coefficientSum = 0.0;
+
+		for (int kernelY = 0; kernelY < kernelSize.Height; ++kernelY)
+		{
+			for (int kernelX = 0; kernelX < kernelSize.Width; ++kernelX)
+			{
+				const double normalizedX = static_cast<double>(kernelX - kernelCenterX) / standardDeviation;
+				const double normalizedY = static_cast<double>(kernelY - kernelCenterY) / standardDeviation;
+				const double exponent = -0.5 * (normalizedX * normalizedX + normalizedY * normalizedY);
+				const double coefficient = std::exp(exponent);
+				const std::size_t rowOffset = static_cast<std::size_t>(kernelY) * static_cast<std::size_t>(kernelSize.Width);
+				const std::size_t coefficientIndex = rowOffset + static_cast<std::size_t>(kernelX);
+
+				coefficients[coefficientIndex] = coefficient;
+				coefficientSum += coefficient;
+			}
+		}
+
+		const bool isCoefficientSumFinite = std::isfinite(coefficientSum);
+		assert(isCoefficientSumFinite && coefficientSum > 0.0 && "gaussian coefficient sum must be positive and finite.");
+
+		(void)isCoefficientSumFinite;
+
+		for (double& coefficient : coefficients)
+		{
+			coefficient /= coefficientSum;
+		}
+
+		return ConvolutionKernel(kernelSize, std::move(coefficients));
+	}
+
+	Image CreateGaussianBlurredImage(
+		const Image& image,
+		const Size kernelSize,
+		const double standardDeviation,
+		const ImageBorderParameters borderParameters)
+	{
+		const ConvolutionKernel gaussianKernel = CreateGaussianKernel(kernelSize, standardDeviation);
+		return CreateConvolvedImage(image, gaussianKernel, borderParameters);
+	}
+
+	Image CreateSharpenedImage(const Image& image, const ImageBorderParameters borderParameters)
+	{
+		const ConvolutionKernel sharpeningKernel = CreateSharpeningKernel();
+		return CreateConvolvedImage(image, sharpeningKernel, borderParameters);
+	}
+
+	GrayscaleFilterResponse CreateLaplacianResponse(const Image& grayscaleImage, const ImageBorderParameters borderParameters)
+	{
+		const bool isImageGrayscale = grayscaleImage.GetImageType() == EImageType::UINT8_GRAYSCALE;
+		assert(isImageGrayscale && "image type must be UINT8_GRAYSCALE.");
+
+		const bool isBorderTypeSupported = IsSupportedBorderType(borderParameters.BorderType);
+		assert(isBorderTypeSupported && "border type must be CONSTANT or REPLICATE.");
+
+		(void)isImageGrayscale;
+		(void)isBorderTypeSupported;
+
+		GrayscaleFilterResponse response(grayscaleImage.GetSize());
+		if (grayscaleImage.IsEmpty())
+		{
+			return response;
+		}
+
+		const ConvolutionKernel laplacianKernel = CreateLaplacianKernel();
+
+		for (int y = 0; y < grayscaleImage.GetHeight(); ++y)
+		{
+			for (int x = 0; x < grayscaleImage.GetWidth(); ++x)
+			{
+				response.GetResponseValue(x, y) = ConvolvePixelChannel(
+					grayscaleImage,
+					laplacianKernel,
+					x,
+					y,
+					GRAYSCALE_CHANNEL_INDEX,
+					borderParameters);
+			}
+		}
+
+		return response;
 	}
 }

@@ -8,6 +8,7 @@ project(miniCV
 
 add_library(miniCV STATIC
     src/ConvolutionKernel.cpp
+    src/GrayscaleFilterResponse.cpp
     src/GrayscaleIntegralImage.cpp
     src/Image.cpp
     src/ImageFiltering.cpp
@@ -31,6 +32,7 @@ add_library(miniCV STATIC
     include/minicv/EThresholdType.h
     include/minicv/GrayscaleAdaptiveThresholdParameters.h
     include/minicv/GrayscaleCumulativeDistribution.h
+    include/minicv/GrayscaleFilterResponse.h
     include/minicv/GrayscaleHistogram.h
     include/minicv/GrayscaleIntegralImage.h
     include/minicv/GrayscaleThresholdParameters.h
