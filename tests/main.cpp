@@ -1,4 +1,5 @@
 #include "ConvolutionKernelTest.h"
+#include "GrayscaleFilterResponseTest.h"
 #include "GrayscaleIntegralImageTest.h"
 #include "ImageFilteringTest.h"
 #include "ImageIoTest.h"
@@ -8,6 +9,7 @@
 int main()
 {
 	RunConvolutionKernelTests();
+	RunGrayscaleFilterResponseTests();
 	RunImageTests();
 	RunGrayscaleIntegralImageTests();
 	RunImageFilteringTests();

@@ -78,6 +78,8 @@ if(MINICV_BUILD_TESTS)
             tests/main.cpp
             tests/ConvolutionKernelTest.cpp
             tests/ConvolutionKernelTest.h
+            tests/GrayscaleFilterResponseTest.cpp
+            tests/GrayscaleFilterResponseTest.h
             tests/GrayscaleIntegralImageTest.cpp
             tests/GrayscaleIntegralImageTest.h
             tests/ImageFilteringTest.cpp

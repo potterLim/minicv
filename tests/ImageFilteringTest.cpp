@@ -1,16 +1,20 @@
 #include <array>
 #include <cassert>
+#include <cmath>
 #include <cstddef>
 #include <cstdint>
 #include <vector>
 
 #include "ImageFilteringTest.h"
 #include "minicv/ConvolutionKernel.h"
+#include "minicv/GrayscaleFilterResponse.h"
 #include "minicv/Image.h"
 #include "minicv/ImageFiltering.h"
 
 namespace
 {
+	constexpr double COMPARISON_TOLERANCE = 1e-12;
+
 	template <std::size_t PIXEL_COUNT>
 	void SetGrayscalePixels(minicv::Image& image, const std::array<std::uint8_t, PIXEL_COUNT>& pixelValues)
 	{
@@ -159,6 +163,119 @@ namespace
 		assert(convolvedImage.GetHeight() == 3);
 		assert(convolvedImage.GetImageType() == minicv::EImageType::UINT8_RGB);
 	}
+
+	void TestBoxBlurProducesExpectedAverages()
+	{
+		minicv::Image image(3, 3);
+		SetGrayscalePixels(image, std::array<std::uint8_t, 9>{ 0, 10, 20, 30, 40, 50, 60, 70, 80 });
+
+		const minicv::ImageBorderParameters borderParameters{ minicv::EBorderType::CONSTANT, 0 };
+		const minicv::Image blurredImage = minicv::CreateBoxBlurredImage(image, minicv::Size{ 3, 3 }, borderParameters);
+
+		AssertGrayscalePixelsEqual(blurredImage, std::array<std::uint8_t, 9>{ 9, 17, 13, 23, 40, 30, 22, 37, 27 });
+	}
+
+	void TestGaussianKernelIsNormalizedAndSymmetric()
+	{
+		const minicv::ConvolutionKernel kernel = minicv::CreateGaussianKernel(minicv::Size{ 3, 3 }, 1.0);
+		double coefficientSum = 0.0;
+
+		for (int y = 0; y < kernel.GetHeight(); ++y)
+		{
+			for (int x = 0; x < kernel.GetWidth(); ++x)
+			{
+				coefficientSum += kernel.GetCoefficient(x, y);
+			}
+		}
+
+		const bool isCoefficientSumNormalized = std::abs(coefficientSum - 1.0) <= COMPARISON_TOLERANCE;
+		const bool areCornerCoefficientsEqual = std::abs(kernel.GetCoefficient(0, 0) - kernel.GetCoefficient(2, 2)) <= COMPARISON_TOLERANCE;
+		const bool areEdgeCoefficientsEqual = std::abs(kernel.GetCoefficient(1, 0) - kernel.GetCoefficient(1, 2)) <= COMPARISON_TOLERANCE;
+
+		assert(isCoefficientSumNormalized);
+		assert(areCornerCoefficientsEqual);
+		assert(areEdgeCoefficientsEqual);
+		assert(kernel.GetCoefficient(1, 1) > kernel.GetCoefficient(1, 0));
+		assert(kernel.GetCoefficient(1, 0) > kernel.GetCoefficient(0, 0));
+
+		(void)isCoefficientSumNormalized;
+		(void)areCornerCoefficientsEqual;
+		(void)areEdgeCoefficientsEqual;
+	}
+
+	void TestGaussianBlurProducesExpectedImpulseResponse()
+	{
+		minicv::Image image(3, 3);
+		image.Fill(0);
+		image.GetGrayscalePixel(1, 1) = 255;
+
+		const minicv::ImageBorderParameters borderParameters{ minicv::EBorderType::CONSTANT, 0 };
+		const minicv::Image blurredImage = minicv::CreateGaussianBlurredImage(image, minicv::Size{ 3, 3 }, 1.0, borderParameters);
+
+		AssertGrayscalePixelsEqual(blurredImage, std::array<std::uint8_t, 9>{ 19, 32, 19, 32, 52, 32, 19, 32, 19 });
+	}
+
+	void TestGaussianBlurPreservesSinglePixelRgbImage()
+	{
+		minicv::Image image(1, 1, minicv::EImageType::UINT8_RGB);
+		image.GetRgbPixel(0, 0, minicv::ERgbChannel::RED) = 10;
+		image.GetRgbPixel(0, 0, minicv::ERgbChannel::GREEN) = 20;
+		image.GetRgbPixel(0, 0, minicv::ERgbChannel::BLUE) = 30;
+
+		const minicv::ImageBorderParameters borderParameters{ minicv::EBorderType::REPLICATE, 0 };
+		const minicv::Image blurredImage = minicv::CreateGaussianBlurredImage(image, minicv::Size{ 3, 3 }, 1.0, borderParameters);
+
+		assert(blurredImage.GetImageType() == minicv::EImageType::UINT8_RGB);
+		assert(blurredImage.GetRgbPixel(0, 0, minicv::ERgbChannel::RED) == 10);
+		assert(blurredImage.GetRgbPixel(0, 0, minicv::ERgbChannel::GREEN) == 20);
+		assert(blurredImage.GetRgbPixel(0, 0, minicv::ERgbChannel::BLUE) == 30);
+	}
+
+	void TestSharpeningEnhancesCenterPixel()
+	{
+		minicv::Image image(3, 3);
+		image.Fill(0);
+		image.GetGrayscalePixel(1, 1) = 50;
+
+		const minicv::ImageBorderParameters borderParameters{ minicv::EBorderType::CONSTANT, 0 };
+		const minicv::Image sharpenedImage = minicv::CreateSharpenedImage(image, borderParameters);
+
+		AssertGrayscalePixelsEqual(sharpenedImage, std::array<std::uint8_t, 9>{ 0, 0, 0, 0, 250, 0, 0, 0, 0 });
+	}
+
+	void TestLaplacianResponsePreservesSignedValues()
+	{
+		minicv::Image image(3, 3);
+		image.Fill(0);
+		image.GetGrayscalePixel(1, 1) = 100;
+
+		const minicv::ImageBorderParameters borderParameters{ minicv::EBorderType::CONSTANT, 0 };
+		const minicv::GrayscaleFilterResponse response = minicv::CreateLaplacianResponse(image, borderParameters);
+
+		assert(response.GetSize().Width == 3);
+		assert(response.GetSize().Height == 3);
+		assert(response.GetResponseValue(0, 0) == 0.0);
+		assert(response.GetResponseValue(1, 0) == 100.0);
+		assert(response.GetResponseValue(2, 0) == 0.0);
+		assert(response.GetResponseValue(0, 1) == 100.0);
+		assert(response.GetResponseValue(1, 1) == -400.0);
+		assert(response.GetResponseValue(2, 1) == 100.0);
+		assert(response.GetResponseValue(0, 2) == 0.0);
+		assert(response.GetResponseValue(1, 2) == 100.0);
+		assert(response.GetResponseValue(2, 2) == 0.0);
+		assert(image.GetGrayscalePixel(1, 1) == 100);
+	}
+
+	void TestLaplacianResponsePreservesEmptyImageSize()
+	{
+		const minicv::Image image(0, 4);
+		const minicv::ImageBorderParameters borderParameters{ minicv::EBorderType::REPLICATE, 0 };
+		const minicv::GrayscaleFilterResponse response = minicv::CreateLaplacianResponse(image, borderParameters);
+
+		assert(response.IsEmpty());
+		assert(response.GetWidth() == 0);
+		assert(response.GetHeight() == 4);
+	}
 }
 
 void RunImageFilteringTests()
@@ -171,4 +288,11 @@ void RunImageFilteringTests()
 	TestReplicateBorderHandlesTwoDimensionalCorners();
 	TestConstantBorderProcessesRgbChannelsIndependently();
 	TestConvolutionPreservesEmptyImageShape();
+	TestBoxBlurProducesExpectedAverages();
+	TestGaussianKernelIsNormalizedAndSymmetric();
+	TestGaussianBlurProducesExpectedImpulseResponse();
+	TestGaussianBlurPreservesSinglePixelRgbImage();
+	TestSharpeningEnhancesCenterPixel();
+	TestLaplacianResponsePreservesSignedValues();
+	TestLaplacianResponsePreservesEmptyImageSize();
 }
