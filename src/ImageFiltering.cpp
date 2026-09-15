@@ -1,3 +1,4 @@
+#include <algorithm>
 #include <cassert>
 #include <cmath>
 #include <cstddef>
@@ -20,7 +21,7 @@ namespace minicv
 			return borderType == EBorderType::CONSTANT || borderType == EBorderType::REPLICATE;
 		}
 
-		std::size_t CalculateKernelCoefficientCount(const Size kernelSize)
+		std::size_t CalculateKernelElementCount(const Size kernelSize)
 		{
 			assert(kernelSize.Width > 0 && "kernel width must be positive.");
 			assert(kernelSize.Height > 0 && "kernel height must be positive.");
@@ -30,7 +31,7 @@ namespace minicv
 			const std::size_t kernelWidth = static_cast<std::size_t>(kernelSize.Width);
 			const std::size_t kernelHeight = static_cast<std::size_t>(kernelSize.Height);
 
-			assert(kernelWidth <= std::numeric_limits<std::size_t>::max() / kernelHeight && "kernel coefficient count overflow.");
+			assert(kernelWidth <= std::numeric_limits<std::size_t>::max() / kernelHeight && "kernel element count overflow.");
 
 			return kernelWidth * kernelHeight;
 		}
@@ -141,7 +142,7 @@ namespace minicv
 			}
 
 			const bool isPixelValueFinite = std::isfinite(pixelValue);
-			assert(isPixelValueFinite && "convolved pixel value must be finite.");
+			assert(isPixelValueFinite && "pixel value must be finite.");
 
 			if (!isPixelValueFinite)
 			{
@@ -149,6 +150,38 @@ namespace minicv
 			}
 
 			return static_cast<std::uint8_t>(std::lround(pixelValue));
+		}
+
+		std::uint8_t SelectMedianPixelValue(std::vector<std::uint8_t>& pixelValues)
+		{
+			assert(!pixelValues.empty() && "pixel values must not be empty.");
+
+			const std::size_t medianIndex = pixelValues.size() / 2;
+			std::nth_element(pixelValues.begin(), pixelValues.begin() + static_cast<std::ptrdiff_t>(medianIndex), pixelValues.end());
+
+			return pixelValues[medianIndex];
+		}
+
+		double CalculateMaximumAbsoluteResponse(const GrayscaleFilterResponse& response)
+		{
+			double maximumAbsoluteResponse = 0.0;
+
+			for (int y = 0; y < response.GetHeight(); ++y)
+			{
+				for (int x = 0; x < response.GetWidth(); ++x)
+				{
+					const double responseValue = response.GetResponseValue(x, y);
+					const bool isResponseValueFinite = std::isfinite(responseValue);
+					assert(isResponseValueFinite && "filter response value must be finite.");
+
+					if (isResponseValueFinite)
+					{
+						maximumAbsoluteResponse = std::max(maximumAbsoluteResponse, std::abs(responseValue));
+					}
+				}
+			}
+
+			return maximumAbsoluteResponse;
 		}
 
 		double ConvolvePixelChannel(
@@ -215,7 +248,7 @@ namespace minicv
 
 	Image CreateBoxBlurredImage(const Image& image, const Size kernelSize, const ImageBorderParameters borderParameters)
 	{
-		const std::size_t coefficientCount = CalculateKernelCoefficientCount(kernelSize);
+		const std::size_t coefficientCount = CalculateKernelElementCount(kernelSize);
 		const double coefficient = 1.0 / static_cast<double>(coefficientCount);
 		std::vector<double> coefficients = CreateKernelCoefficientBuffer(coefficientCount);
 
@@ -236,7 +269,7 @@ namespace minicv
 
 		(void)isStandardDeviationFinite;
 
-		const std::size_t coefficientCount = CalculateKernelCoefficientCount(kernelSize);
+		const std::size_t coefficientCount = CalculateKernelElementCount(kernelSize);
 		std::vector<double> coefficients = CreateKernelCoefficientBuffer(coefficientCount);
 		const int kernelCenterX = kernelSize.Width / 2;
 		const int kernelCenterY = kernelSize.Height / 2;
@@ -281,6 +314,59 @@ namespace minicv
 		return CreateConvolvedImage(image, gaussianKernel, borderParameters);
 	}
 
+	Image CreateMedianFilteredImage(const Image& image, const Size kernelSize, const ImageBorderParameters borderParameters)
+	{
+		const std::size_t neighborhoodPixelCount = CalculateKernelElementCount(kernelSize);
+		const bool isBorderTypeSupported = IsSupportedBorderType(borderParameters.BorderType);
+		assert(isBorderTypeSupported && "border type must be CONSTANT or REPLICATE.");
+
+		(void)isBorderTypeSupported;
+
+		Image medianFilteredImage(image.GetSize(), image.GetImageType());
+		if (image.IsEmpty())
+		{
+			return medianFilteredImage;
+		}
+
+		std::vector<std::uint8_t> neighborhoodPixelValues;
+		assert(neighborhoodPixelCount <= neighborhoodPixelValues.max_size() && "kernel pixel count exceeds maximum vector size.");
+
+		neighborhoodPixelValues.resize(neighborhoodPixelCount);
+
+		const int kernelCenterX = kernelSize.Width / 2;
+		const int kernelCenterY = kernelSize.Height / 2;
+		const std::size_t channelCount = static_cast<std::size_t>(image.GetChannelCount());
+		std::uint8_t* const medianFilteredPixelData = medianFilteredImage.GetPixelData();
+
+		for (int y = 0; y < image.GetHeight(); ++y)
+		{
+			for (int x = 0; x < image.GetWidth(); ++x)
+			{
+				for (std::size_t channelIndex = 0; channelIndex < channelCount; ++channelIndex)
+				{
+					std::size_t neighborhoodPixelIndex = 0;
+
+					for (int kernelY = 0; kernelY < kernelSize.Height; ++kernelY)
+					{
+						for (int kernelX = 0; kernelX < kernelSize.Width; ++kernelX)
+						{
+							const std::int64_t sourceX = static_cast<std::int64_t>(x) + kernelX - kernelCenterX;
+							const std::int64_t sourceY = static_cast<std::int64_t>(y) + kernelY - kernelCenterY;
+
+							neighborhoodPixelValues[neighborhoodPixelIndex] = GetBorderedPixelValue(image, sourceX, sourceY, channelIndex, borderParameters);
+							++neighborhoodPixelIndex;
+						}
+					}
+
+					const std::size_t pixelByteIndex = CalculatePixelByteIndex(medianFilteredImage, x, y, channelIndex);
+					medianFilteredPixelData[pixelByteIndex] = SelectMedianPixelValue(neighborhoodPixelValues);
+				}
+			}
+		}
+
+		return medianFilteredImage;
+	}
+
 	Image CreateSharpenedImage(const Image& image, const ImageBorderParameters borderParameters)
 	{
 		const ConvolutionKernel sharpeningKernel = CreateSharpeningKernel();
@@ -321,5 +407,37 @@ namespace minicv
 		}
 
 		return response;
+	}
+
+	Image CreateSignedResponseImage(const GrayscaleFilterResponse& response)
+	{
+		Image signedResponseImage(response.GetSize());
+		if (response.IsEmpty())
+		{
+			return signedResponseImage;
+		}
+
+		const double maximumAbsoluteResponse = CalculateMaximumAbsoluteResponse(response);
+		const double maximumByteValue = static_cast<double>(std::numeric_limits<std::uint8_t>::max());
+		const double zeroResponsePixelValue = maximumByteValue / 2.0;
+
+		if (maximumAbsoluteResponse == 0.0)
+		{
+			signedResponseImage.Fill(ClampAndRoundToByte(zeroResponsePixelValue));
+			return signedResponseImage;
+		}
+
+		for (int y = 0; y < response.GetHeight(); ++y)
+		{
+			for (int x = 0; x < response.GetWidth(); ++x)
+			{
+				const double normalizedResponse = response.GetResponseValue(x, y) / maximumAbsoluteResponse;
+				const double pixelValue = (normalizedResponse + 1.0) * zeroResponsePixelValue;
+
+				signedResponseImage.GetGrayscalePixel(x, y) = ClampAndRoundToByte(pixelValue);
+			}
+		}
+
+		return signedResponseImage;
 	}
 }

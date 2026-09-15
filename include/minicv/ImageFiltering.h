@@ -17,6 +17,8 @@ namespace minicv
 		const Size kernelSize,
 		const double standardDeviation,
 		const ImageBorderParameters borderParameters);
+	[[nodiscard]] Image CreateMedianFilteredImage(const Image& image, const Size kernelSize, const ImageBorderParameters borderParameters);
 	[[nodiscard]] Image CreateSharpenedImage(const Image& image, const ImageBorderParameters borderParameters);
 	[[nodiscard]] GrayscaleFilterResponse CreateLaplacianResponse(const Image& grayscaleImage, const ImageBorderParameters borderParameters);
+	[[nodiscard]] Image CreateSignedResponseImage(const GrayscaleFilterResponse& response);
 }
