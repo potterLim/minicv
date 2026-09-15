@@ -59,6 +59,21 @@ namespace minicv
 				std::vector<double>{ 0.0, 1.0, 0.0, 1.0, -4.0, 1.0, 0.0, 1.0, 0.0 });
 		}
 
+		// Coefficients use convolution order so intensity increases to the right or downward produce positive responses.
+		ConvolutionKernel CreateSobelXKernel()
+		{
+			return ConvolutionKernel(
+				Size{ 3, 3 },
+				std::vector<double>{ 1.0, 0.0, -1.0, 2.0, 0.0, -2.0, 1.0, 0.0, -1.0 });
+		}
+
+		ConvolutionKernel CreateSobelYKernel()
+		{
+			return ConvolutionKernel(
+				Size{ 3, 3 },
+				std::vector<double>{ 1.0, 2.0, 1.0, 0.0, 0.0, 0.0, -1.0, -2.0, -1.0 });
+		}
+
 		bool IsInsideImage(const Image& image, const std::int64_t x, const std::int64_t y)
 		{
 			return x >= 0 && x < image.GetWidth() && y >= 0 && y < image.GetHeight();
@@ -184,6 +199,31 @@ namespace minicv
 			return maximumAbsoluteResponse;
 		}
 
+		double CalculateMaximumGradientMagnitude(const GrayscaleFilterResponse& response)
+		{
+			double maximumResponse = 0.0;
+
+			for (int y = 0; y < response.GetHeight(); ++y)
+			{
+				for (int x = 0; x < response.GetWidth(); ++x)
+				{
+					const double responseValue = response.GetResponseValue(x, y);
+					const bool isResponseValueFinite = std::isfinite(responseValue);
+					const bool isResponseValueNonNegative = responseValue >= 0.0;
+
+					assert(isResponseValueFinite && "gradient magnitude must be finite.");
+					assert(isResponseValueNonNegative && "gradient magnitude must not be negative.");
+
+					if (isResponseValueFinite && isResponseValueNonNegative)
+					{
+						maximumResponse = std::max(maximumResponse, responseValue);
+					}
+				}
+			}
+
+			return maximumResponse;
+		}
+
 		double ConvolvePixelChannel(
 			const Image& image,
 			const ConvolutionKernel& kernel,
@@ -210,6 +250,43 @@ namespace minicv
 			}
 
 			return convolvedPixelValue;
+		}
+
+		GrayscaleFilterResponse CreateGrayscaleConvolutionResponse(
+			const Image& grayscaleImage,
+			const ConvolutionKernel& kernel,
+			const ImageBorderParameters borderParameters)
+		{
+			const bool isImageGrayscale = grayscaleImage.GetImageType() == EImageType::UINT8_GRAYSCALE;
+			assert(isImageGrayscale && "image type must be UINT8_GRAYSCALE.");
+
+			const bool isBorderTypeSupported = IsSupportedBorderType(borderParameters.BorderType);
+			assert(isBorderTypeSupported && "border type must be CONSTANT or REPLICATE.");
+
+			(void)isImageGrayscale;
+			(void)isBorderTypeSupported;
+
+			GrayscaleFilterResponse response(grayscaleImage.GetSize());
+			if (grayscaleImage.IsEmpty())
+			{
+				return response;
+			}
+
+			for (int y = 0; y < grayscaleImage.GetHeight(); ++y)
+			{
+				for (int x = 0; x < grayscaleImage.GetWidth(); ++x)
+				{
+					response.GetResponseValue(x, y) = ConvolvePixelChannel(
+						grayscaleImage,
+						kernel,
+						x,
+						y,
+						GRAYSCALE_CHANNEL_INDEX,
+						borderParameters);
+				}
+			}
+
+			return response;
 		}
 	}
 
@@ -375,38 +452,8 @@ namespace minicv
 
 	GrayscaleFilterResponse CreateLaplacianResponse(const Image& grayscaleImage, const ImageBorderParameters borderParameters)
 	{
-		const bool isImageGrayscale = grayscaleImage.GetImageType() == EImageType::UINT8_GRAYSCALE;
-		assert(isImageGrayscale && "image type must be UINT8_GRAYSCALE.");
-
-		const bool isBorderTypeSupported = IsSupportedBorderType(borderParameters.BorderType);
-		assert(isBorderTypeSupported && "border type must be CONSTANT or REPLICATE.");
-
-		(void)isImageGrayscale;
-		(void)isBorderTypeSupported;
-
-		GrayscaleFilterResponse response(grayscaleImage.GetSize());
-		if (grayscaleImage.IsEmpty())
-		{
-			return response;
-		}
-
 		const ConvolutionKernel laplacianKernel = CreateLaplacianKernel();
-
-		for (int y = 0; y < grayscaleImage.GetHeight(); ++y)
-		{
-			for (int x = 0; x < grayscaleImage.GetWidth(); ++x)
-			{
-				response.GetResponseValue(x, y) = ConvolvePixelChannel(
-					grayscaleImage,
-					laplacianKernel,
-					x,
-					y,
-					GRAYSCALE_CHANNEL_INDEX,
-					borderParameters);
-			}
-		}
-
-		return response;
+		return CreateGrayscaleConvolutionResponse(grayscaleImage, laplacianKernel, borderParameters);
 	}
 
 	Image CreateSignedResponseImage(const GrayscaleFilterResponse& response)
@@ -439,5 +486,115 @@ namespace minicv
 		}
 
 		return signedResponseImage;
+	}
+
+	GrayscaleFilterResponse CreateSobelXResponse(const Image& grayscaleImage, const ImageBorderParameters borderParameters)
+	{
+		const ConvolutionKernel sobelXKernel = CreateSobelXKernel();
+		return CreateGrayscaleConvolutionResponse(grayscaleImage, sobelXKernel, borderParameters);
+	}
+
+	GrayscaleFilterResponse CreateSobelYResponse(const Image& grayscaleImage, const ImageBorderParameters borderParameters)
+	{
+		const ConvolutionKernel sobelYKernel = CreateSobelYKernel();
+		return CreateGrayscaleConvolutionResponse(grayscaleImage, sobelYKernel, borderParameters);
+	}
+
+	GrayscaleFilterResponse CreateGradientMagnitudeResponse(
+		const GrayscaleFilterResponse& sobelXResponse,
+		const GrayscaleFilterResponse& sobelYResponse)
+	{
+		const bool isResponseSizeEqual = sobelXResponse.GetWidth() == sobelYResponse.GetWidth() && sobelXResponse.GetHeight() == sobelYResponse.GetHeight();
+		assert(isResponseSizeEqual && "Sobel response sizes must match.");
+
+		(void)isResponseSizeEqual;
+
+		GrayscaleFilterResponse gradientMagnitudeResponse(sobelXResponse.GetSize());
+
+		for (int y = 0; y < sobelXResponse.GetHeight(); ++y)
+		{
+			for (int x = 0; x < sobelXResponse.GetWidth(); ++x)
+			{
+				const double sobelXValue = sobelXResponse.GetResponseValue(x, y);
+				const double sobelYValue = sobelYResponse.GetResponseValue(x, y);
+				const bool isGradientFinite = std::isfinite(sobelXValue) && std::isfinite(sobelYValue);
+				assert(isGradientFinite && "Sobel response values must be finite.");
+
+				(void)isGradientFinite;
+
+				const double magnitude = std::hypot(sobelXValue, sobelYValue);
+				const bool isMagnitudeFinite = std::isfinite(magnitude);
+				assert(isMagnitudeFinite && "gradient magnitude must be finite.");
+
+				(void)isMagnitudeFinite;
+
+				gradientMagnitudeResponse.GetResponseValue(x, y) = magnitude;
+			}
+		}
+
+		return gradientMagnitudeResponse;
+	}
+
+	GrayscaleFilterResponse CreateGradientDirectionResponse(
+		const GrayscaleFilterResponse& sobelXResponse,
+		const GrayscaleFilterResponse& sobelYResponse)
+	{
+		const bool isResponseSizeEqual = sobelXResponse.GetWidth() == sobelYResponse.GetWidth() && sobelXResponse.GetHeight() == sobelYResponse.GetHeight();
+		assert(isResponseSizeEqual && "Sobel response sizes must match.");
+
+		(void)isResponseSizeEqual;
+
+		GrayscaleFilterResponse gradientDirectionResponse(sobelXResponse.GetSize());
+
+		for (int y = 0; y < sobelXResponse.GetHeight(); ++y)
+		{
+			for (int x = 0; x < sobelXResponse.GetWidth(); ++x)
+			{
+				const double sobelXValue = sobelXResponse.GetResponseValue(x, y);
+				const double sobelYValue = sobelYResponse.GetResponseValue(x, y);
+				const bool isGradientFinite = std::isfinite(sobelXValue) && std::isfinite(sobelYValue);
+				assert(isGradientFinite && "Sobel response values must be finite.");
+
+				(void)isGradientFinite;
+
+				const bool isZeroGradient = sobelXValue == 0.0 && sobelYValue == 0.0;
+				const double direction = isZeroGradient ? 0.0 : std::atan2(sobelYValue, sobelXValue);
+
+				gradientDirectionResponse.GetResponseValue(x, y) = direction;
+			}
+		}
+
+		return gradientDirectionResponse;
+	}
+
+	Image CreateNormalizedGradientMagnitudeImage(const GrayscaleFilterResponse& gradientMagnitudeResponse)
+	{
+		Image normalizedImage(gradientMagnitudeResponse.GetSize());
+		if (gradientMagnitudeResponse.IsEmpty())
+		{
+			return normalizedImage;
+		}
+
+		const double maximumMagnitude = CalculateMaximumGradientMagnitude(gradientMagnitudeResponse);
+		if (maximumMagnitude == 0.0)
+		{
+			normalizedImage.Fill(0);
+			return normalizedImage;
+		}
+
+		const double maximumByteValue = static_cast<double>(std::numeric_limits<std::uint8_t>::max());
+
+		for (int y = 0; y < gradientMagnitudeResponse.GetHeight(); ++y)
+		{
+			for (int x = 0; x < gradientMagnitudeResponse.GetWidth(); ++x)
+			{
+				const double magnitude = gradientMagnitudeResponse.GetResponseValue(x, y);
+				const double normalizedPixelValue = magnitude / maximumMagnitude * maximumByteValue;
+
+				normalizedImage.GetGrayscalePixel(x, y) = ClampAndRoundToByte(normalizedPixelValue);
+			}
+		}
+
+		return normalizedImage;
 	}
 }

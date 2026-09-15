@@ -21,4 +21,18 @@ namespace minicv
 	[[nodiscard]] Image CreateSharpenedImage(const Image& image, const ImageBorderParameters borderParameters);
 	[[nodiscard]] GrayscaleFilterResponse CreateLaplacianResponse(const Image& grayscaleImage, const ImageBorderParameters borderParameters);
 	[[nodiscard]] Image CreateSignedResponseImage(const GrayscaleFilterResponse& response);
+
+	[[nodiscard]] GrayscaleFilterResponse CreateSobelXResponse(const Image& grayscaleImage, const ImageBorderParameters borderParameters);
+	[[nodiscard]] GrayscaleFilterResponse CreateSobelYResponse(const Image& grayscaleImage, const ImageBorderParameters borderParameters);
+	[[nodiscard]] GrayscaleFilterResponse CreateGradientMagnitudeResponse(
+		const GrayscaleFilterResponse& sobelXResponse,
+		const GrayscaleFilterResponse& sobelYResponse);
+
+	/** Returns gradient directions as atan2(sobelY, sobelX) in radians within [-pi, pi]. Zero gradients map to 0 radians. */
+	[[nodiscard]] GrayscaleFilterResponse CreateGradientDirectionResponse(
+		const GrayscaleFilterResponse& sobelXResponse,
+		const GrayscaleFilterResponse& sobelYResponse);
+
+	/** Maps finite, non-negative gradient magnitudes from [0, maximum] to [0, 255]. */
+	[[nodiscard]] Image CreateNormalizedGradientMagnitudeImage(const GrayscaleFilterResponse& gradientMagnitudeResponse);
 }
