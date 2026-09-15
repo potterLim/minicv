@@ -3,6 +3,7 @@
 #include <cmath>
 #include <cstddef>
 #include <cstdint>
+#include <numbers>
 #include <vector>
 
 #include "ImageFilteringTest.h"
@@ -14,6 +15,9 @@
 namespace
 {
 	constexpr double COMPARISON_TOLERANCE = 1e-12;
+	constexpr double FIRST_QUADRANT_DIRECTION_RADIANS = 0.9272952180016122;
+	constexpr double HALF_PI_RADIANS = std::numbers::pi_v<double> / 2.0;
+	constexpr double SECOND_QUADRANT_DIRECTION_RADIANS = std::numbers::pi_v<double> - FIRST_QUADRANT_DIRECTION_RADIANS;
 
 	template <std::size_t PIXEL_COUNT>
 	void SetGrayscalePixels(minicv::Image& image, const std::array<std::uint8_t, PIXEL_COUNT>& pixelValues)
@@ -43,6 +47,51 @@ namespace
 			assert(isPixelValueEqual);
 
 			(void)isPixelValueEqual;
+		}
+	}
+
+	template <std::size_t RESPONSE_VALUE_COUNT>
+	void SetFilterResponseValues(minicv::GrayscaleFilterResponse& response, const std::array<double, RESPONSE_VALUE_COUNT>& responseValues)
+	{
+		const std::size_t responseValueCount = static_cast<std::size_t>(response.GetWidth()) * static_cast<std::size_t>(response.GetHeight());
+		const bool doesResponseValueCountMatch = responseValueCount == RESPONSE_VALUE_COUNT;
+		assert(doesResponseValueCountMatch);
+
+		(void)doesResponseValueCountMatch;
+
+		const std::size_t responseWidth = static_cast<std::size_t>(response.GetWidth());
+
+		for (std::size_t responseValueIndex = 0; responseValueIndex < RESPONSE_VALUE_COUNT; ++responseValueIndex)
+		{
+			const int x = static_cast<int>(responseValueIndex % responseWidth);
+			const int y = static_cast<int>(responseValueIndex / responseWidth);
+
+			response.GetResponseValue(x, y) = responseValues[responseValueIndex];
+		}
+	}
+
+	template <std::size_t RESPONSE_VALUE_COUNT>
+	void AssertFilterResponseValuesEqual(
+		const minicv::GrayscaleFilterResponse& response,
+		const std::array<double, RESPONSE_VALUE_COUNT>& expectedResponseValues)
+	{
+		const std::size_t responseValueCount = static_cast<std::size_t>(response.GetWidth()) * static_cast<std::size_t>(response.GetHeight());
+		const bool doesResponseValueCountMatch = responseValueCount == RESPONSE_VALUE_COUNT;
+		assert(doesResponseValueCountMatch);
+
+		(void)doesResponseValueCountMatch;
+
+		const std::size_t responseWidth = static_cast<std::size_t>(response.GetWidth());
+
+		for (std::size_t responseValueIndex = 0; responseValueIndex < RESPONSE_VALUE_COUNT; ++responseValueIndex)
+		{
+			const int x = static_cast<int>(responseValueIndex % responseWidth);
+			const int y = static_cast<int>(responseValueIndex / responseWidth);
+			const double responseValue = response.GetResponseValue(x, y);
+			const bool isResponseValueEqual = std::abs(responseValue - expectedResponseValues[responseValueIndex]) <= COMPARISON_TOLERANCE;
+			assert(isResponseValueEqual);
+
+			(void)isResponseValueEqual;
 		}
 	}
 
@@ -376,6 +425,72 @@ namespace
 		assert(signedResponseImage.GetHeight() == 4);
 		assert(signedResponseImage.GetImageType() == minicv::EImageType::UINT8_GRAYSCALE);
 	}
+
+	void TestSobelResponsesDetectHorizontalAndVerticalChanges()
+	{
+		minicv::Image image(3, 3);
+		SetGrayscalePixels(image, std::array<std::uint8_t, 9>{ 0, 10, 20, 20, 30, 40, 40, 50, 60 });
+
+		const minicv::ImageBorderParameters borderParameters{ minicv::EBorderType::REPLICATE, 0 };
+		const minicv::GrayscaleFilterResponse sobelXResponse = minicv::CreateSobelXResponse(image, borderParameters);
+		const minicv::GrayscaleFilterResponse sobelYResponse = minicv::CreateSobelYResponse(image, borderParameters);
+
+		AssertFilterResponseValuesEqual(sobelXResponse, std::array<double, 9>{ 40.0, 80.0, 40.0, 40.0, 80.0, 40.0, 40.0, 80.0, 40.0 });
+		AssertFilterResponseValuesEqual(sobelYResponse, std::array<double, 9>{ 80.0, 80.0, 80.0, 160.0, 160.0, 160.0, 80.0, 80.0, 80.0 });
+	}
+
+	void TestGradientMagnitudeAndDirectionResponses()
+	{
+		minicv::GrayscaleFilterResponse sobelXResponse(minicv::Size{ 5, 1 });
+		minicv::GrayscaleFilterResponse sobelYResponse(minicv::Size{ 5, 1 });
+		SetFilterResponseValues(sobelXResponse, std::array<double, 5>{ 3.0, 0.0, -3.0, 0.0, 0.0 });
+		SetFilterResponseValues(sobelYResponse, std::array<double, 5>{ 4.0, 5.0, 4.0, -5.0, 0.0 });
+
+		const minicv::GrayscaleFilterResponse gradientMagnitudeResponse = minicv::CreateGradientMagnitudeResponse(sobelXResponse, sobelYResponse);
+		const minicv::GrayscaleFilterResponse gradientDirectionResponse = minicv::CreateGradientDirectionResponse(sobelXResponse, sobelYResponse);
+
+		AssertFilterResponseValuesEqual(gradientMagnitudeResponse, std::array<double, 5>{ 5.0, 5.0, 5.0, 5.0, 0.0 });
+		AssertFilterResponseValuesEqual(
+			gradientDirectionResponse,
+			std::array<double, 5>{ FIRST_QUADRANT_DIRECTION_RADIANS, HALF_PI_RADIANS, SECOND_QUADRANT_DIRECTION_RADIANS, -HALF_PI_RADIANS, 0.0 });
+	}
+
+	void TestGradientMagnitudeNormalizationMapsFullByteRange()
+	{
+		minicv::GrayscaleFilterResponse gradientMagnitudeResponse(minicv::Size{ 5, 1 });
+		SetFilterResponseValues(gradientMagnitudeResponse, std::array<double, 5>{ 0.0, 5.0, 10.0, 15.0, 20.0 });
+
+		const minicv::Image normalizedImage = minicv::CreateNormalizedGradientMagnitudeImage(gradientMagnitudeResponse);
+
+		AssertGrayscalePixelsEqual(normalizedImage, std::array<std::uint8_t, 5>{ 0, 64, 128, 191, 255 });
+	}
+
+	void TestZeroGradientMagnitudeNormalizesToBlack()
+	{
+		const minicv::GrayscaleFilterResponse gradientMagnitudeResponse(minicv::Size{ 3, 2 });
+		const minicv::Image normalizedImage = minicv::CreateNormalizedGradientMagnitudeImage(gradientMagnitudeResponse);
+
+		AssertGrayscalePixelsEqual(normalizedImage, std::array<std::uint8_t, 6>{ 0, 0, 0, 0, 0, 0 });
+	}
+
+	void TestSobelPipelinePreservesEmptySize()
+	{
+		const minicv::Image image(0, 4);
+		const minicv::ImageBorderParameters borderParameters{ minicv::EBorderType::REPLICATE, 0 };
+		const minicv::GrayscaleFilterResponse sobelXResponse = minicv::CreateSobelXResponse(image, borderParameters);
+		const minicv::GrayscaleFilterResponse sobelYResponse = minicv::CreateSobelYResponse(image, borderParameters);
+		const minicv::GrayscaleFilterResponse gradientMagnitudeResponse = minicv::CreateGradientMagnitudeResponse(sobelXResponse, sobelYResponse);
+		const minicv::GrayscaleFilterResponse gradientDirectionResponse = minicv::CreateGradientDirectionResponse(sobelXResponse, sobelYResponse);
+		const minicv::Image normalizedImage = minicv::CreateNormalizedGradientMagnitudeImage(gradientMagnitudeResponse);
+
+		assert(sobelXResponse.IsEmpty());
+		assert(sobelYResponse.IsEmpty());
+		assert(gradientMagnitudeResponse.IsEmpty());
+		assert(gradientDirectionResponse.IsEmpty());
+		assert(normalizedImage.IsEmpty());
+		assert(normalizedImage.GetWidth() == 0);
+		assert(normalizedImage.GetHeight() == 4);
+	}
 }
 
 void RunImageFilteringTests()
@@ -402,4 +517,9 @@ void RunImageFilteringTests()
 	TestSignedResponseImageMapsNegativeZeroAndPositiveValues();
 	TestSignedResponseImageCentersZeroResponse();
 	TestSignedResponseImagePreservesEmptyResponseSize();
+	TestSobelResponsesDetectHorizontalAndVerticalChanges();
+	TestGradientMagnitudeAndDirectionResponses();
+	TestGradientMagnitudeNormalizationMapsFullByteRange();
+	TestZeroGradientMagnitudeNormalizesToBlack();
+	TestSobelPipelinePreservesEmptySize();
 }
