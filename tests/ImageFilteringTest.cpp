@@ -231,6 +231,73 @@ namespace
 		assert(blurredImage.GetRgbPixel(0, 0, minicv::ERgbChannel::BLUE) == 30);
 	}
 
+	void TestMedianFilterRemovesIsolatedNoise()
+	{
+		minicv::Image image(3, 3);
+		image.Fill(0);
+		image.GetGrayscalePixel(1, 1) = 255;
+
+		const minicv::ImageBorderParameters borderParameters{ minicv::EBorderType::REPLICATE, 0 };
+		const minicv::Image filteredImage = minicv::CreateMedianFilteredImage(image, minicv::Size{ 3, 3 }, borderParameters);
+
+		AssertGrayscalePixelsEqual(filteredImage, std::array<std::uint8_t, 9>{ 0, 0, 0, 0, 0, 0, 0, 0, 0 });
+		assert(image.GetGrayscalePixel(1, 1) == 255);
+	}
+
+	void TestMedianFilterAppliesConstantAndReplicateBorders()
+	{
+		minicv::Image image(2, 1);
+		SetGrayscalePixels(image, std::array<std::uint8_t, 2>{ 10, 200 });
+
+		const minicv::ImageBorderParameters constantBorderParameters{ minicv::EBorderType::CONSTANT, 0 };
+		const minicv::ImageBorderParameters replicateBorderParameters{ minicv::EBorderType::REPLICATE, 0 };
+		const minicv::Image constantBorderImage = minicv::CreateMedianFilteredImage(image, minicv::Size{ 3, 1 }, constantBorderParameters);
+		const minicv::Image replicateBorderImage = minicv::CreateMedianFilteredImage(image, minicv::Size{ 3, 1 }, replicateBorderParameters);
+
+		AssertGrayscalePixelsEqual(constantBorderImage, std::array<std::uint8_t, 2>{ 10, 10 });
+		AssertGrayscalePixelsEqual(replicateBorderImage, std::array<std::uint8_t, 2>{ 10, 200 });
+	}
+
+	void TestMedianFilterProcessesRgbChannelsIndependently()
+	{
+		minicv::Image image(3, 1, minicv::EImageType::UINT8_RGB);
+		image.GetRgbPixel(0, 0, minicv::ERgbChannel::RED) = 0;
+		image.GetRgbPixel(0, 0, minicv::ERgbChannel::GREEN) = 255;
+		image.GetRgbPixel(0, 0, minicv::ERgbChannel::BLUE) = 10;
+		image.GetRgbPixel(1, 0, minicv::ERgbChannel::RED) = 255;
+		image.GetRgbPixel(1, 0, minicv::ERgbChannel::GREEN) = 0;
+		image.GetRgbPixel(1, 0, minicv::ERgbChannel::BLUE) = 20;
+		image.GetRgbPixel(2, 0, minicv::ERgbChannel::RED) = 0;
+		image.GetRgbPixel(2, 0, minicv::ERgbChannel::GREEN) = 255;
+		image.GetRgbPixel(2, 0, minicv::ERgbChannel::BLUE) = 30;
+
+		const minicv::ImageBorderParameters borderParameters{ minicv::EBorderType::REPLICATE, 0 };
+		const minicv::Image filteredImage = minicv::CreateMedianFilteredImage(image, minicv::Size{ 3, 1 }, borderParameters);
+
+		assert(filteredImage.GetImageType() == minicv::EImageType::UINT8_RGB);
+		assert(filteredImage.GetRgbPixel(0, 0, minicv::ERgbChannel::RED) == 0);
+		assert(filteredImage.GetRgbPixel(0, 0, minicv::ERgbChannel::GREEN) == 255);
+		assert(filteredImage.GetRgbPixel(0, 0, minicv::ERgbChannel::BLUE) == 10);
+		assert(filteredImage.GetRgbPixel(1, 0, minicv::ERgbChannel::RED) == 0);
+		assert(filteredImage.GetRgbPixel(1, 0, minicv::ERgbChannel::GREEN) == 255);
+		assert(filteredImage.GetRgbPixel(1, 0, minicv::ERgbChannel::BLUE) == 20);
+		assert(filteredImage.GetRgbPixel(2, 0, minicv::ERgbChannel::RED) == 0);
+		assert(filteredImage.GetRgbPixel(2, 0, minicv::ERgbChannel::GREEN) == 255);
+		assert(filteredImage.GetRgbPixel(2, 0, minicv::ERgbChannel::BLUE) == 30);
+	}
+
+	void TestMedianFilterPreservesEmptyImageShape()
+	{
+		const minicv::Image image(0, 3, minicv::EImageType::UINT8_RGB);
+		const minicv::ImageBorderParameters borderParameters{ minicv::EBorderType::REPLICATE, 0 };
+		const minicv::Image filteredImage = minicv::CreateMedianFilteredImage(image, minicv::Size{ 3, 3 }, borderParameters);
+
+		assert(filteredImage.IsEmpty());
+		assert(filteredImage.GetWidth() == 0);
+		assert(filteredImage.GetHeight() == 3);
+		assert(filteredImage.GetImageType() == minicv::EImageType::UINT8_RGB);
+	}
+
 	void TestSharpeningEnhancesCenterPixel()
 	{
 		minicv::Image image(3, 3);
@@ -276,6 +343,39 @@ namespace
 		assert(response.GetWidth() == 0);
 		assert(response.GetHeight() == 4);
 	}
+
+	void TestSignedResponseImageMapsNegativeZeroAndPositiveValues()
+	{
+		minicv::GrayscaleFilterResponse response(minicv::Size{ 5, 1 });
+		response.GetResponseValue(0, 0) = -20.0;
+		response.GetResponseValue(1, 0) = -10.0;
+		response.GetResponseValue(2, 0) = 0.0;
+		response.GetResponseValue(3, 0) = 10.0;
+		response.GetResponseValue(4, 0) = 20.0;
+
+		const minicv::Image signedResponseImage = minicv::CreateSignedResponseImage(response);
+
+		AssertGrayscalePixelsEqual(signedResponseImage, std::array<std::uint8_t, 5>{ 0, 64, 128, 191, 255 });
+	}
+
+	void TestSignedResponseImageCentersZeroResponse()
+	{
+		const minicv::GrayscaleFilterResponse response(minicv::Size{ 3, 2 });
+		const minicv::Image signedResponseImage = minicv::CreateSignedResponseImage(response);
+
+		AssertGrayscalePixelsEqual(signedResponseImage, std::array<std::uint8_t, 6>{ 128, 128, 128, 128, 128, 128 });
+	}
+
+	void TestSignedResponseImagePreservesEmptyResponseSize()
+	{
+		const minicv::GrayscaleFilterResponse response(minicv::Size{ 0, 4 });
+		const minicv::Image signedResponseImage = minicv::CreateSignedResponseImage(response);
+
+		assert(signedResponseImage.IsEmpty());
+		assert(signedResponseImage.GetWidth() == 0);
+		assert(signedResponseImage.GetHeight() == 4);
+		assert(signedResponseImage.GetImageType() == minicv::EImageType::UINT8_GRAYSCALE);
+	}
 }
 
 void RunImageFilteringTests()
@@ -292,7 +392,14 @@ void RunImageFilteringTests()
 	TestGaussianKernelIsNormalizedAndSymmetric();
 	TestGaussianBlurProducesExpectedImpulseResponse();
 	TestGaussianBlurPreservesSinglePixelRgbImage();
+	TestMedianFilterRemovesIsolatedNoise();
+	TestMedianFilterAppliesConstantAndReplicateBorders();
+	TestMedianFilterProcessesRgbChannelsIndependently();
+	TestMedianFilterPreservesEmptyImageShape();
 	TestSharpeningEnhancesCenterPixel();
 	TestLaplacianResponsePreservesSignedValues();
 	TestLaplacianResponsePreservesEmptyImageSize();
+	TestSignedResponseImageMapsNegativeZeroAndPositiveValues();
+	TestSignedResponseImageCentersZeroResponse();
+	TestSignedResponseImagePreservesEmptyResponseSize();
 }
