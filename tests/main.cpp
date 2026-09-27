@@ -3,8 +3,10 @@
 #include "GrayscaleIntegralImageTest.h"
 #include "ImageFilteringTest.h"
 #include "ImageIoTest.h"
+#include "ImageMorphologyTest.h"
 #include "ImageOperationsTest.h"
 #include "ImageTest.h"
+#include "StructuringElementTest.h"
 
 int main()
 {
@@ -15,6 +17,8 @@ int main()
 	RunImageFilteringTests();
 	RunImageIoTests();
 	RunImageOperationsTests();
+	RunStructuringElementTests();
+	RunImageMorphologyTests();
 
 	return 0;
 }

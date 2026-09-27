@@ -90,10 +90,14 @@ if(MINICV_BUILD_TESTS)
             tests/ImageFilteringTest.h
             tests/ImageIoTest.cpp
             tests/ImageIoTest.h
+            tests/ImageMorphologyTest.cpp
+            tests/ImageMorphologyTest.h
             tests/ImageOperationsTest.cpp
             tests/ImageOperationsTest.h
             tests/ImageTest.cpp
             tests/ImageTest.h
+            tests/StructuringElementTest.cpp
+            tests/StructuringElementTest.h
         )
 
         target_link_libraries(minicv_tests
