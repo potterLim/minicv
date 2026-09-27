@@ -52,6 +52,9 @@ cmake --build --preset macos-debug --target minicv_image_io_round_trip_example
 
 cmake --build --preset macos-debug --target minicv_threshold_and_convolution_example
 ./out/build/macos/Debug/minicv_threshold_and_convolution_example
+
+cmake --build --preset macos-debug --target minicv_filtering_and_sobel_example
+./out/build/macos/Debug/minicv_filtering_and_sobel_example
 ```
 
 Windows MSVC:
@@ -68,7 +71,35 @@ cmake --build --preset windows-msvc-debug --target minicv_image_io_round_trip_ex
 
 cmake --build --preset windows-msvc-debug --target minicv_threshold_and_convolution_example
 .\out\build\windows-msvc\Debug\minicv_threshold_and_convolution_example.exe
+
+cmake --build --preset windows-msvc-debug --target minicv_filtering_and_sobel_example
+.\out\build\windows-msvc\Debug\minicv_filtering_and_sobel_example.exe
 ```
+
+### 필터링과 Sobel 비교 예제
+
+`FilteringAndSobelExample`은 경계에 닿는 밝은 영역과 점 잡음이 있는 이미지를 만들고,
+constant(0)와 replicate 경계 처리 결과를 비교합니다. 박스/가우시안 블러, 중앙값 필터,
+선명화, Laplacian, Sobel X/Y와 gradient magnitude를 저장하며,
+가우시안 블러 전후의 Sobel 결과도 비교할 수 있습니다.
+
+결과는 시스템 임시 디렉터리의 `minicv_filtering_and_sobel_example/constant`와
+`replicate`에 각각 저장됩니다. 실행 시 실제 경로를 출력하고, 모든 PGM 파일은 저장 후
+다시 읽어 픽셀이 일치하는지 검증합니다.
+
+| 파일 | 확인할 내용 |
+| --- | --- |
+| `source.pgm` | 경계에 닿는 사각형과 밝고 어두운 점 잡음 |
+| `box_blurred.pgm`, `gaussian_blurred.pgm` | 평활화 방식에 따른 경계와 잡음의 변화 |
+| `median_filtered.pgm` | 고립된 점 잡음 제거 |
+| `sharpened.pgm` | 경계 강조와 8-bit 범위 제한 |
+| `laplacian_signed.pgm` | Laplacian의 양수·음수 응답 |
+| `sobel_x_signed.pgm`, `sobel_y_signed.pgm` | X/Y 방향의 밝기 변화와 부호 |
+| `sobel_magnitude.pgm`, `gaussian_sobel_magnitude.pgm` | 가우시안 블러 전후의 엣지 형태 |
+
+Signed response 영상은 0을 회색(128), 음수를 어둡게, 양수를 밝게 표시합니다.
+각 영상은 자체 최댓값(부호가 있는 응답은 절댓값의 최댓값)으로 정규화하므로,
+서로 다른 영상의 밝기를 원래 응답 크기의 절대 비교에 사용하지 않습니다.
 
 ## 빌드 설정
 

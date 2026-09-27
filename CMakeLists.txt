@@ -123,6 +123,10 @@ if(MINICV_BUILD_EXAMPLES)
         examples/ThresholdAndConvolutionExample.cpp
     )
 
+    add_executable(minicv_filtering_and_sobel_example
+        examples/FilteringAndSobelExample.cpp
+    )
+
     target_link_libraries(minicv_image_difference_example
         PRIVATE
             miniCV::miniCV
@@ -143,8 +147,14 @@ if(MINICV_BUILD_EXAMPLES)
             miniCV::miniCV
     )
 
+    target_link_libraries(minicv_filtering_and_sobel_example
+        PRIVATE
+            miniCV::miniCV
+    )
+
     minicv_enable_warnings(minicv_image_difference_example)
     minicv_enable_warnings(minicv_histogram_example)
     minicv_enable_warnings(minicv_image_io_round_trip_example)
     minicv_enable_warnings(minicv_threshold_and_convolution_example)
+    minicv_enable_warnings(minicv_filtering_and_sobel_example)
 endif()
