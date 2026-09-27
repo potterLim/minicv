@@ -101,6 +101,32 @@ Signed response 영상은 0을 회색(128), 음수를 어둡게, 양수를 밝�
 각 영상은 자체 최댓값(부호가 있는 응답은 절댓값의 최댓값)으로 정규화하므로,
 서로 다른 영상의 밝기를 원래 응답 크기의 절대 비교에 사용하지 않습니다.
 
+## 모폴로지
+
+`ImageMorphology.h`는 grayscale/RGB 이미지의 침식, 팽창, 열기, 닫기를 제공합니다.
+RGB는 채널별로 독립 처리하며, 이진 영상뿐 아니라 일반 8-bit 밝기 값에도 적용할 수 있습니다.
+
+```cpp
+#include "minicv/ImageMorphology.h"
+
+const minicv::StructuringElement element =
+    minicv::CreateRectangularStructuringElement(minicv::Size{ 3, 3 });
+const minicv::ImageBorderParameters border{ minicv::EBorderType::REPLICATE, 0 };
+const minicv::Image openedImage = minicv::CreateOpenedImage(sourceImage, element, border);
+const minicv::Image closedImage = minicv::CreateClosedImage(openedImage, element, border);
+```
+
+구조 요소는 양의 홀수 크기와 중앙 anchor를 사용합니다. 사각형·십자형 생성 함수를 사용하거나,
+`StructuringElement(size, maskValues)`에 행 우선 마스크를 전달할 수 있습니다.
+0은 제외, 0 이외의 값은 포함을 뜻하며 활성 위치가 하나 이상 있어야 합니다.
+비대칭 마스크는 침식에서 중앙 기준 오프셋을 그대로 사용하고, 팽창에서 반전해 사용합니다.
+
+열기는 침식 후 팽창, 닫기는 팽창 후 침식 순서입니다. `CONSTANT` 경계값은 두 단계 모두에
+그대로 적용됩니다. 예를 들어 0을 지정하면 침식 시 이미지 가장자리의 밝은 영역도 줄어들 수 있습니다.
+출력은 입력 크기와 타입을 유지하며 입력을 수정하지 않습니다. 빈 입력은 같은 shape의 빈 결과를 반환합니다.
+잘못된 구조 요소 크기·마스크, 범위 밖 마스크 좌표, 지원하지 않는 경계 타입은 기존 필터와 동일하게
+내부 사전 조건 위반으로 취급하여 Debug `assert`로 검사합니다.
+
 ## 빌드 설정
 
 제공된 CMake preset은 `Ninja Multi-Config` generator를 사용하며, 다음 설정을 기본으로 합니다.

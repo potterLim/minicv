@@ -13,6 +13,7 @@ add_library(miniCV STATIC
     src/Image.cpp
     src/ImageFiltering.cpp
     src/ImageIo.cpp
+    src/ImageMorphology.cpp
     src/ImageOperations.cpp
     src/NetpbmImageIo.cpp
     src/NetpbmImageIo.h
@@ -20,11 +21,13 @@ add_library(miniCV STATIC
     src/PgmImageIo.h
     src/PpmImageIo.cpp
     src/PpmImageIo.h
+    src/StructuringElement.cpp
     include/minicv/ConvolutionKernel.h
     include/minicv/Image.h
     include/minicv/ImageBorderParameters.h
     include/minicv/ImageFiltering.h
     include/minicv/ImageIo.h
+    include/minicv/ImageMorphology.h
     include/minicv/ImageOperations.h
     include/minicv/EBorderType.h
     include/minicv/EImageType.h
@@ -40,6 +43,7 @@ add_library(miniCV STATIC
     include/minicv/Point.h
     include/minicv/Rect.h
     include/minicv/Size.h
+    include/minicv/StructuringElement.h
 )
 add_library(miniCV::miniCV ALIAS miniCV)
 
