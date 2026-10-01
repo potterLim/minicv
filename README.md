@@ -127,6 +127,33 @@ const minicv::Image closedImage = minicv::CreateClosedImage(openedImage, element
 잘못된 구조 요소 크기·마스크, 범위 밖 마스크 좌표, 지원하지 않는 경계 타입은 기존 필터와 동일하게
 내부 사전 조건 위반으로 취급하여 Debug `assert`로 검사합니다.
 
+## 연결 영역 분석
+
+`ConnectedComponents`는 grayscale 이미지에서 0을 배경, 나머지 값을 전경으로 취급해
+연결된 영역에 라벨을 부여하고 면적·경계 박스·중심점을 계산합니다.
+
+```cpp
+#include "minicv/ConnectedComponents.h"
+#include "minicv/Image.h"
+
+const minicv::ConnectedComponents components(binaryImage, minicv::EConnectivity::EIGHT);
+const std::size_t componentCount = components.GetComponentCount();
+const std::vector<minicv::ConnectedComponent>& statistics = components.GetComponents();
+```
+
+`FOUR`는 상하좌우, `EIGHT`는 대각선까지 연결합니다. 전경의 밝기 값이 서로 달라도
+인접하면 같은 영역에 속합니다. 배경 라벨은 0이고, 전경 라벨은 행 우선으로 처음 발견한
+영역부터 1, 2, 3 순서입니다. `GetLabel(x, y)`로 픽셀의 라벨을 조회할 수 있으며,
+라벨이 n인 영역의 통계는 `GetComponents()[n - 1]`에 있습니다. 배경 통계는 포함하지 않습니다.
+
+면적은 픽셀 수, 경계 박스는 좌상단 위치와 픽셀 단위 너비·높이입니다.
+중심점은 영역에 속한 픽셀 좌표의 산술평균이며 밝기에 따른 가중치를 적용하지 않습니다.
+라벨은 `std::size_t`로 저장해 255개를 넘는 영역도 구분합니다.
+
+결과는 입력을 수정하거나 참조하지 않고 자체 보관합니다. 빈 입력은 원래 크기를 유지하며,
+배경만 있는 정상 크기의 이미지에서는 `IsEmpty()`가 false이고 영역 개수는 0입니다.
+RGB 입력, 지원하지 않는 연결성, 범위 밖 좌표는 Debug `assert`로 검사합니다.
+
 ## 빌드 설정
 
 제공된 CMake preset은 `Ninja Multi-Config` generator를 사용하며, 다음 설정을 기본으로 합니다.

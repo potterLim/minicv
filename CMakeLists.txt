@@ -7,6 +7,7 @@ project(miniCV
 )
 
 add_library(miniCV STATIC
+    src/ConnectedComponents.cpp
     src/ConvolutionKernel.cpp
     src/GrayscaleFilterResponse.cpp
     src/GrayscaleIntegralImage.cpp
@@ -23,6 +24,9 @@ add_library(miniCV STATIC
     src/PpmImageIo.h
     src/StructuringElement.cpp
     include/minicv/ConvolutionKernel.h
+    include/minicv/ConnectedComponent.h
+    include/minicv/ConnectedComponents.h
+    include/minicv/EConnectivity.h
     include/minicv/Image.h
     include/minicv/ImageBorderParameters.h
     include/minicv/ImageFiltering.h
