@@ -1,3 +1,7 @@
+#ifdef NDEBUG
+#error Test assertions must remain enabled in every build configuration.
+#endif
+
 #include "ConnectedComponentsTest.h"
 #include "ConvolutionKernelTest.h"
 #include "GrayscaleFilterResponseTest.h"

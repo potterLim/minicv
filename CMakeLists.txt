@@ -113,6 +113,14 @@ if(MINICV_BUILD_TESTS)
 
         minicv_enable_warnings(minicv_tests)
 
+        # Test checks must execute in every configuration, including Release.
+        foreach(test_target IN ITEMS minicv_tests)
+            target_compile_options(${test_target} PRIVATE
+                $<$<CXX_COMPILER_ID:MSVC>:/UNDEBUG>
+                $<$<NOT:$<CXX_COMPILER_ID:MSVC>>:-UNDEBUG>
+            )
+        endforeach()
+
         add_test(
             NAME minicv.tests
             COMMAND minicv_tests

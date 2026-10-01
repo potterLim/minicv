@@ -61,6 +61,14 @@ namespace
 		outputStream << text;
 	}
 
+	void AssertSaveResult(const minicv::Image& image, const std::filesystem::path& filePath, const bool expectedResult)
+	{
+		const bool isSaved = minicv::TrySaveImage(image, filePath);
+		assert(isSaved == expectedResult);
+		static_cast<void>(isSaved);
+		static_cast<void>(expectedResult);
+	}
+
 	std::string ReadMagicNumber(const std::filesystem::path& filePath)
 	{
 		std::ifstream inputStream(filePath, std::ios::binary);
@@ -115,7 +123,7 @@ namespace
 
 		const minicv::Image image = CreateSampleGrayscaleImage();
 
-		assert(minicv::TrySaveImage(image, filePath));
+		AssertSaveResult(image, filePath, true);
 
 		const bool hasBinaryPgmMagicNumber = ReadMagicNumber(filePath) == "P5";
 		assert(hasBinaryPgmMagicNumber);
@@ -135,7 +143,7 @@ namespace
 
 		const minicv::Image image = CreateSampleRgbImage();
 
-		assert(minicv::TrySaveImage(image, filePath));
+		AssertSaveResult(image, filePath, true);
 
 		const bool hasBinaryPpmMagicNumber = ReadMagicNumber(filePath) == "P6";
 		assert(hasBinaryPpmMagicNumber);
@@ -287,8 +295,8 @@ namespace
 		const minicv::Image grayscaleImage = CreateSampleGrayscaleImage();
 		const minicv::Image rgbImage = CreateSampleRgbImage();
 
-		assert(minicv::TrySaveImage(grayscaleImage, pgmFilePath));
-		assert(minicv::TrySaveImage(rgbImage, ppmFilePath));
+		AssertSaveResult(grayscaleImage, pgmFilePath, true);
+		AssertSaveResult(rgbImage, ppmFilePath, true);
 
 		const std::optional<minicv::Image> loadedGrayscaleImage = minicv::TryLoadImage(pgmFilePath);
 		const std::optional<minicv::Image> loadedRgbImage = minicv::TryLoadImage(ppmFilePath);
@@ -318,7 +326,7 @@ namespace
 		const std::optional<minicv::Image> loadedImage = minicv::TryLoadImage(filePath);
 
 		assert(!loadedImage.has_value());
-		assert(!minicv::TrySaveImage(CreateSampleGrayscaleImage(), filePath));
+		AssertSaveResult(CreateSampleGrayscaleImage(), filePath, false);
 
 		RemoveFile(filePath);
 	}
@@ -330,8 +338,8 @@ namespace
 		RemoveFile(pgmFilePath);
 		RemoveFile(ppmFilePath);
 
-		assert(!minicv::TrySaveImage(CreateSampleRgbImage(), pgmFilePath));
-		assert(!minicv::TrySaveImage(CreateSampleGrayscaleImage(), ppmFilePath));
+		AssertSaveResult(CreateSampleRgbImage(), pgmFilePath, false);
+		AssertSaveResult(CreateSampleGrayscaleImage(), ppmFilePath, false);
 
 		RemoveFile(pgmFilePath);
 		RemoveFile(ppmFilePath);
@@ -381,7 +389,7 @@ namespace
 		const std::filesystem::path filePath = directoryPath / "image.pgm";
 		RemoveDirectory(directoryPath);
 
-		assert(!minicv::TrySaveImage(CreateSampleGrayscaleImage(), filePath));
+		AssertSaveResult(CreateSampleGrayscaleImage(), filePath, false);
 		assert(!std::filesystem::exists(filePath));
 	}
 
