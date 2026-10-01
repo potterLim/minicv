@@ -126,10 +126,34 @@ namespace minicv::netpbm
 			return byteCount <= NETPBM_MAX_IMAGE_BYTE_COUNT;
 		}
 
-		bool TryReadToken(std::istream& inputStream, std::string* outToken, char* outDelimiter)
+		void ReadHeaderWhitespace(std::istream& inputStream, const char character, bool* outUsesCrLf)
+		{
+			assert(outUsesCrLf != nullptr);
+			if (character == '\r' && inputStream.peek() == '\n')
+			{
+				inputStream.get();
+				*outUsesCrLf = true;
+			}
+		}
+
+		void SkipHeaderComment(std::istream& inputStream, bool* outUsesCrLf)
+		{
+			char character = '\0';
+			while (inputStream.get(character))
+			{
+				if (character == '\r' || character == '\n')
+				{
+					ReadHeaderWhitespace(inputStream, character, outUsesCrLf);
+					return;
+				}
+			}
+		}
+
+		bool TryReadToken(std::istream& inputStream, std::string* outToken, char* outDelimiter, bool* outUsesCrLf, const bool isLastHeaderToken)
 		{
 			assert(outToken != nullptr && "outToken must not be null.");
 			assert(outDelimiter != nullptr && "outDelimiter must not be null.");
+			assert(outUsesCrLf != nullptr && "outUsesCrLf must not be null.");
 			*outDelimiter = '\0';
 
 			outToken->clear();
@@ -139,12 +163,13 @@ namespace minicv::netpbm
 			{
 				if (std::isspace(static_cast<unsigned char>(character)) != 0)
 				{
+					ReadHeaderWhitespace(inputStream, character, outUsesCrLf);
 					continue;
 				}
 
 				if (character == '#')
 				{
-					inputStream.ignore(std::numeric_limits<std::streamsize>::max(), '\n');
+					SkipHeaderComment(inputStream, outUsesCrLf);
 					continue;
 				}
 
@@ -162,12 +187,16 @@ namespace minicv::netpbm
 				if (std::isspace(static_cast<unsigned char>(character)) != 0)
 				{
 					*outDelimiter = character;
+					if (!isLastHeaderToken)
+					{
+						ReadHeaderWhitespace(inputStream, character, outUsesCrLf);
+					}
 					return true;
 				}
 
 				if (character == '#')
 				{
-					inputStream.ignore(std::numeric_limits<std::streamsize>::max(), '\n');
+					SkipHeaderComment(inputStream, outUsesCrLf);
 					return true;
 				}
 
@@ -211,8 +240,9 @@ namespace minicv::netpbm
 	std::optional<NetpbmHeader> TryReadNetpbmHeader(std::istream& inputStream)
 	{
 		std::string magicNumber;
+		bool usesCrLf = false;
 		char delimiter = '\0';
-		if (!TryReadToken(inputStream, &magicNumber, &delimiter))
+		if (!TryReadToken(inputStream, &magicNumber, &delimiter, &usesCrLf, false))
 		{
 			return std::nullopt;
 		}
@@ -223,20 +253,30 @@ namespace minicv::netpbm
 			return std::nullopt;
 		}
 
-		const std::optional<int> width = TryReadIntToken(inputStream);
+		std::string widthToken;
+		if (!TryReadToken(inputStream, &widthToken, &delimiter, &usesCrLf, false))
+		{
+			return std::nullopt;
+		}
+		const std::optional<int> width = TryParseInt(widthToken);
 		if (!width.has_value())
 		{
 			return std::nullopt;
 		}
 
-		const std::optional<int> height = TryReadIntToken(inputStream);
+		std::string heightToken;
+		if (!TryReadToken(inputStream, &heightToken, &delimiter, &usesCrLf, false))
+		{
+			return std::nullopt;
+		}
+		const std::optional<int> height = TryParseInt(heightToken);
 		if (!height.has_value())
 		{
 			return std::nullopt;
 		}
 
 		std::string maxPixelToken;
-		if (!TryReadToken(inputStream, &maxPixelToken, &delimiter))
+		if (!TryReadToken(inputStream, &maxPixelToken, &delimiter, &usesCrLf, true))
 		{
 			return std::nullopt;
 		}
@@ -259,27 +299,11 @@ namespace minicv::netpbm
 				return std::nullopt;
 			}
 
-			if (delimiter == '\r' && inputStream.peek() == '\n')
+			// Use header line endings, never raster contents or remaining file length.
+			// Without an earlier CRLF, CR is a single separator and a following LF is data.
+			if (usesCrLf && delimiter == '\r' && inputStream.peek() == '\n')
 			{
-				// Prefer the single-byte separator unless an exact-size CRLF raster follows.
-				const std::streampos rasterPosition = inputStream.tellg();
-				inputStream.seekg(0, std::ios::end);
-				const std::streampos endPosition = inputStream.tellg();
-				if (rasterPosition == std::streampos(-1) || endPosition == std::streampos(-1))
-				{
-					return std::nullopt;
-				}
-				inputStream.seekg(rasterPosition);
-				if (!inputStream.good())
-				{
-					return std::nullopt;
-				}
-				const std::size_t pixelCount = static_cast<std::size_t>(header.Width) * static_cast<std::size_t>(header.Height);
-				const std::size_t byteCount = pixelCount * static_cast<std::size_t>(GetChannelCount(header.Format));
-				if (endPosition - rasterPosition == static_cast<std::streamoff>(byteCount + 1))
-				{
-					inputStream.get();
-				}
+				inputStream.get();
 			}
 		}
 
@@ -289,8 +313,9 @@ namespace minicv::netpbm
 	std::optional<int> TryReadIntToken(std::istream& inputStream)
 	{
 		std::string token;
+		bool usesCrLf = false;
 		char delimiter = '\0';
-		if (!TryReadToken(inputStream, &token, &delimiter))
+		if (!TryReadToken(inputStream, &token, &delimiter, &usesCrLf, false))
 		{
 			return std::nullopt;
 		}

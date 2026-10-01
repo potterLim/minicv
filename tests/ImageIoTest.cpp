@@ -479,23 +479,64 @@ namespace
 		{
 			for (const bool isRgb : { false, true })
 			{
-				const std::filesystem::path filePath = GetTestFilePath(isRgb ? "minicv_separator_review.ppm" : "minicv_separator_review.pgm");
-				const std::array<unsigned char, 6> pixels{ 10, 13, 32, 35, 0, 255 };
+				for (const int trailingByteCount : { 0, 1, 4 })
+				{
+					const std::filesystem::path filePath = GetTestFilePath(isRgb ? "minicv_separator_review.ppm" : "minicv_separator_review.pgm");
+					const std::array<unsigned char, 6> pixels{ 10, 13, 32, 35, 0, 255 };
+					{
+						std::ofstream outputStream(filePath, std::ios::binary);
+						const char* const lineEnding = separator == "\r\n" ? "\r\n" : "\n";
+						outputStream << (isRgb ? "P6" : "P5") << lineEnding;
+						outputStream << (isRgb ? "2 1" : "6 1") << lineEnding << "255" << separator;
+						outputStream.write(reinterpret_cast<const char*>(pixels.data()), pixels.size());
+						for (int index = 0; index < trailingByteCount; ++index)
+						{
+							outputStream.put('\n');
+						}
+					}
+					const std::optional<minicv::Image> loadedImage = minicv::TryLoadImage(filePath);
+					assert(loadedImage.has_value());
+					for (std::size_t index = 0; index < pixels.size(); ++index)
+					{
+						const bool isPixelEqual = loadedImage->GetPixelData()[index] == pixels[index];
+						assert(isPixelEqual);
+						static_cast<void>(isPixelEqual);
+					}
+					RemoveFile(filePath);
+				}
+			}
+		}
+	}
+
+	void TestBinaryCrLfWithTrailingAndTruncatedData()
+	{
+		for (const bool isRgb : { false, true })
+		{
+			const std::filesystem::path filePath = GetTestFilePath(isRgb ? "minicv_crlf_regression.ppm" : "minicv_crlf_regression.pgm");
+			const std::array<unsigned char, 6> pixels{ 10, 13, 32, 35, 0, 255 };
+			for (const int byteAdjustment : { -1, 0, 1, 4 })
+			{
 				{
 					std::ofstream outputStream(filePath, std::ios::binary);
-					outputStream << (isRgb ? "P6\n2 1\n255" : "P5\n6 1\n255") << separator;
-					outputStream.write(reinterpret_cast<const char*>(pixels.data()), pixels.size());
+					outputStream << (isRgb ? "P6\r\n2 1\r\n255\r\n" : "P5\r\n6 1\r\n255\r\n");
+					const std::streamsize byteCount = byteAdjustment < 0 ? 5 : 6;
+					outputStream.write(reinterpret_cast<const char*>(pixels.data()), byteCount);
+					for (int index = 0; index < byteAdjustment; ++index)
+					{
+						outputStream.put('\n');
+					}
 				}
 				const std::optional<minicv::Image> loadedImage = minicv::TryLoadImage(filePath);
-				assert(loadedImage.has_value());
-				for (std::size_t index = 0; index < pixels.size(); ++index)
+				assert(loadedImage.has_value() == (byteAdjustment >= 0));
+				if (loadedImage.has_value())
 				{
-					const bool isPixelEqual = loadedImage->GetPixelData()[index] == pixels[index];
-					assert(isPixelEqual);
-					static_cast<void>(isPixelEqual);
+					for (std::size_t index = 0; index < pixels.size(); ++index)
+					{
+						assert(loadedImage->GetPixelData()[index] == pixels[index]);
+					}
 				}
-				RemoveFile(filePath);
 			}
+			RemoveFile(filePath);
 		}
 	}
 
@@ -532,6 +573,7 @@ void RunImageIoTests()
 {
 	TestBinaryWriteReportsFlushFailure();
 	TestBinarySeparatorsPreserveRasterBytes();
+	TestBinaryCrLfWithTrailingAndTruncatedData();
 	TestSaveAndLoadPgmImage();
 	TestSaveAndLoadPpmImage();
 	TestLoadAsciiPgmImage();
