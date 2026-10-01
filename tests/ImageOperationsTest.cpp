@@ -770,6 +770,34 @@ namespace
 		(void)equalizedImage;
 	}
 
+	void TestHistogramEqualizationRoundsFromPixelCounts()
+	{
+		for (int firstCount = 1; firstCount <= 10; ++firstCount)
+		{
+			for (int middleCount = 1; middleCount <= 10; ++middleCount)
+			{
+				for (int lastCount = 1; lastCount <= 10; ++lastCount)
+				{
+					minicv::Image image(firstCount + middleCount + lastCount, 1);
+					for (int x = 0; x < image.GetWidth(); ++x)
+					{
+						image.GetGrayscalePixel(x, 0) = x < firstCount ? 0 : x < firstCount + middleCount ? 1 : 2;
+					}
+					const minicv::Image equalizedImage = minicv::CreateHistogramEqualizedGrayscaleImage(image);
+					const int remainingCount = middleCount + lastCount;
+					const int expectedMiddleValue = (255 * middleCount + remainingCount / 2) / remainingCount;
+					for (int x = 0; x < image.GetWidth(); ++x)
+					{
+						const int expectedValue = x < firstCount ? 0 : x < firstCount + middleCount ? expectedMiddleValue : 255;
+						const bool isPixelEqual = equalizedImage.GetGrayscalePixel(x, 0) == expectedValue;
+						assert(isPixelEqual);
+						static_cast<void>(isPixelEqual);
+					}
+				}
+			}
+		}
+	}
+
 	void TestCreateHistogramEqualizedGrayscaleImageFromConstantImage()
 	{
 		minicv::Image image(3, 1);
@@ -1012,6 +1040,7 @@ void RunImageOperationsTests()
 	TestGrayscaleHistogramAndNormalizationFlow();
 	TestCreateContrastStretchedGrayscaleImage();
 	TestCreateHistogramEqualizedGrayscaleImage();
+	TestHistogramEqualizationRoundsFromPixelCounts();
 	TestCreateHistogramEqualizedGrayscaleImageFromConstantImage();
 	TestCreateThresholdedGrayscaleImages();
 	TestGrayscaleContrastAndThresholdOperationsFromEmptyImages();

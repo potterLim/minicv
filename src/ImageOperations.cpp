@@ -137,21 +137,20 @@ namespace minicv
 
 		std::array<std::uint8_t, GRAYSCALE_HISTOGRAM_BIN_COUNT> CreateHistogramEqualizationLookupTable(
 			const GrayscaleHistogram& histogram,
-			const GrayscaleCumulativeDistribution& cumulativeDistribution)
+			const std::size_t pixelCount)
 		{
 			std::array<std::uint8_t, GRAYSCALE_HISTOGRAM_BIN_COUNT> lookupTable{};
 			const std::size_t firstPopulatedBinIndex = GetFirstPopulatedHistogramBinIndex(histogram);
-			const double minimumCumulativeValue = cumulativeDistribution.Values[firstPopulatedBinIndex];
-			const double remainingCumulativeRange = 1.0 - minimumCumulativeValue;
+			const std::size_t remainingPixelCount = pixelCount - histogram.BinCounts[firstPopulatedBinIndex];
+			assert(remainingPixelCount > 0 && "histogram must contain more than one distinct pixel value.");
+			std::size_t cumulativePixelCount = 0;
+			const long double maximumByteValue = static_cast<long double>(std::numeric_limits<std::uint8_t>::max());
 
-			assert(remainingCumulativeRange > 0.0 && "histogram must contain more than one distinct pixel value.");
-
-			const double maximumByteValue = static_cast<double>(std::numeric_limits<std::uint8_t>::max());
-
-			for (std::size_t binIndex = 0; binIndex < lookupTable.size(); ++binIndex)
+			for (std::size_t binIndex = firstPopulatedBinIndex + 1; binIndex < lookupTable.size(); ++binIndex)
 			{
-				const double shiftedCumulativeValue = cumulativeDistribution.Values[binIndex] - minimumCumulativeValue;
-				const double equalizedPixelValue = shiftedCumulativeValue / remainingCumulativeRange * maximumByteValue;
+				cumulativePixelCount += histogram.BinCounts[binIndex];
+				const long double scaledPixelCount = static_cast<long double>(cumulativePixelCount) * maximumByteValue;
+				const double equalizedPixelValue = static_cast<double>(scaledPixelCount / static_cast<long double>(remainingPixelCount));
 				lookupTable[binIndex] = ClampAndRoundToByte(equalizedPixelValue);
 			}
 
@@ -555,8 +554,7 @@ namespace minicv
 			return grayscaleImage.Clone();
 		}
 
-		const GrayscaleCumulativeDistribution cumulativeDistribution = CalculateGrayscaleCumulativeDistribution(histogram);
-		const std::array<std::uint8_t, GRAYSCALE_HISTOGRAM_BIN_COUNT> lookupTable = CreateHistogramEqualizationLookupTable(histogram, cumulativeDistribution);
+		const std::array<std::uint8_t, GRAYSCALE_HISTOGRAM_BIN_COUNT> lookupTable = CreateHistogramEqualizationLookupTable(histogram, grayscaleImage.GetPixelCount());
 		Image equalizedImage(grayscaleImage.GetSize(), EImageType::UINT8_GRAYSCALE);
 		const std::uint8_t* const sourcePixelData = grayscaleImage.GetPixelData();
 		std::uint8_t* const equalizedPixelData = equalizedImage.GetPixelData();
