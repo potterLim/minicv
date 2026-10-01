@@ -310,6 +310,44 @@ namespace
 		RemoveFile(ppmFilePath);
 	}
 
+	void TestUnicodeExtensionsFail()
+	{
+		const std::array<const char8_t*, 3> fileNames{
+			u8"minicv_unicode_extension.\U0001F600",
+			u8"minicv_unicode_extension.\uD55C\uAE00",
+			u8"minicv_unicode_extension.PGM\U0001F600"
+		};
+		const minicv::Image image = CreateSampleGrayscaleImage();
+		for (const char8_t* const fileName : fileNames)
+		{
+			const std::filesystem::path filePath = std::filesystem::temp_directory_path() / std::filesystem::path(fileName);
+			RemoveFile(filePath);
+			const std::optional<minicv::Image> loadedImage = minicv::TryLoadImage(filePath);
+			assert(!loadedImage.has_value());
+			AssertSaveResult(image, filePath, false);
+			assert(!std::filesystem::exists(filePath));
+		}
+	}
+
+	void TestUnicodeFileNamesRoundTrip()
+	{
+		const std::array<std::filesystem::path, 2> fileNames{
+			std::filesystem::path(u8"minicv_\uD55C\uAE00_\U0001F600.PgM"),
+			std::filesystem::path(u8"minicv_\uD55C\uAE00_\U0001F600.pPm")
+		};
+		const std::array<minicv::Image, 2> images{ CreateSampleGrayscaleImage(), CreateSampleRgbImage() };
+		for (std::size_t index = 0; index < fileNames.size(); ++index)
+		{
+			const std::filesystem::path filePath = std::filesystem::temp_directory_path() / fileNames[index];
+			RemoveFile(filePath);
+			AssertSaveResult(images[index], filePath, true);
+			const std::optional<minicv::Image> loadedImage = minicv::TryLoadImage(filePath);
+			assert(loadedImage.has_value());
+			assert(loadedImage->HasSameContent(images[index]));
+			RemoveFile(filePath);
+		}
+	}
+
 	void TestUnknownExtensionFails()
 	{
 		const std::filesystem::path filePath = GetTestFilePath("minicv_unknown_extension_test.txt");
@@ -582,6 +620,8 @@ void RunImageIoTests()
 	TestLoadBinaryPpmImageWithCrLfHeader();
 	TestUppercaseExtensions();
 	TestUnknownExtensionFails();
+	TestUnicodeExtensionsFail();
+	TestUnicodeFileNamesRoundTrip();
 	TestMismatchedSaveExtensionFails();
 	TestMismatchedLoadExtensionFails();
 	TestMissingInputFileFails();

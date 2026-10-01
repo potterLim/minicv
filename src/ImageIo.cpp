@@ -1,4 +1,3 @@
-#include <cctype>
 #include <filesystem>
 #include <optional>
 #include <string>
@@ -11,12 +10,16 @@ namespace minicv
 {
 	namespace
 	{
-		std::string GetLowercaseExtension(const std::filesystem::path& filePath)
+		std::filesystem::path GetLowercaseExtension(const std::filesystem::path& filePath)
 		{
-			std::string extension = filePath.extension().string();
-			for (char& character : extension)
+			std::filesystem::path::string_type extension = filePath.extension().native();
+			for (std::filesystem::path::value_type& character : extension)
 			{
-				character = static_cast<char>(std::tolower(static_cast<unsigned char>(character)));
+				// Supported extensions are ASCII; leave all other native characters unchanged.
+				if (character >= 'A' && character <= 'Z')
+				{
+					character = static_cast<std::filesystem::path::value_type>(character + ('a' - 'A'));
+				}
 			}
 
 			return extension;
@@ -25,7 +28,7 @@ namespace minicv
 
 	std::optional<Image> TryLoadImage(const std::filesystem::path& filePath)
 	{
-		const std::string extension = GetLowercaseExtension(filePath);
+		const std::filesystem::path extension = GetLowercaseExtension(filePath);
 
 		if (extension == ".pgm")
 		{
@@ -42,7 +45,7 @@ namespace minicv
 
 	bool TrySaveImage(const Image& image, const std::filesystem::path& filePath)
 	{
-		const std::string extension = GetLowercaseExtension(filePath);
+		const std::filesystem::path extension = GetLowercaseExtension(filePath);
 
 		if (extension == ".pgm")
 		{
