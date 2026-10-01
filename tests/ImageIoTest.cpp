@@ -1,10 +1,16 @@
+#include <array>
 #include <cassert>
+#include <cstddef>
 #include <filesystem>
 #include <fstream>
+#include <initializer_list>
 #include <optional>
+#include <ostream>
+#include <sstream>
 #include <string>
 #include <system_error>
 
+#include "../src/NetpbmImageIo.h"
 #include "ImageIoTest.h"
 #include "minicv/EImageType.h"
 #include "minicv/ERgbChannel.h"
@@ -13,6 +19,25 @@
 
 namespace
 {
+	class FailingFlushBuffer final : public std::stringbuf
+	{
+	protected:
+		int sync() override
+		{
+			return -1;
+		}
+	};
+
+	void TestBinaryWriteReportsFlushFailure()
+	{
+		FailingFlushBuffer buffer;
+		std::ostream outputStream(&buffer);
+		const minicv::Image image(1, 1);
+		const bool isSaved = minicv::netpbm::TryWriteBinaryPixels(outputStream, image);
+		assert(!isSaved && outputStream.fail());
+		static_cast<void>(isSaved);
+	}
+
 	std::filesystem::path GetTestFilePath(const char* const fileName)
 	{
 		return std::filesystem::temp_directory_path() / fileName;
@@ -439,6 +464,33 @@ namespace
 		RemoveFile(ppmFilePath);
 	}
 
+	void TestBinarySeparatorsPreserveRasterBytes()
+	{
+		const std::array<std::string, 4> separators{ "\r", "\n", " ", "\r\n" };
+		for (const std::string& separator : separators)
+		{
+			for (const bool isRgb : { false, true })
+			{
+				const std::filesystem::path filePath = GetTestFilePath(isRgb ? "minicv_separator_review.ppm" : "minicv_separator_review.pgm");
+				const std::array<unsigned char, 6> pixels{ 10, 13, 32, 35, 0, 255 };
+				{
+					std::ofstream outputStream(filePath, std::ios::binary);
+					outputStream << (isRgb ? "P6\n2 1\n255" : "P5\n6 1\n255") << separator;
+					outputStream.write(reinterpret_cast<const char*>(pixels.data()), pixels.size());
+				}
+				const std::optional<minicv::Image> loadedImage = minicv::TryLoadImage(filePath);
+				assert(loadedImage.has_value());
+				for (std::size_t index = 0; index < pixels.size(); ++index)
+				{
+					const bool isPixelEqual = loadedImage->GetPixelData()[index] == pixels[index];
+					assert(isPixelEqual);
+					static_cast<void>(isPixelEqual);
+				}
+				RemoveFile(filePath);
+			}
+		}
+	}
+
 	void TestOversizedImageFilesFail()
 	{
 		const std::filesystem::path pgmFilePath = GetTestFilePath("minicv_oversized_test.pgm");
@@ -470,6 +522,8 @@ namespace
 
 void RunImageIoTests()
 {
+	TestBinaryWriteReportsFlushFailure();
+	TestBinarySeparatorsPreserveRasterBytes();
 	TestSaveAndLoadPgmImage();
 	TestSaveAndLoadPpmImage();
 	TestLoadAsciiPgmImage();

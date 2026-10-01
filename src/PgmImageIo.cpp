@@ -88,6 +88,12 @@ namespace minicv::netpbm
 			return false;
 		}
 
-		return TryWriteBinaryPixels(outputStream, image);
+		if (!TryWriteBinaryPixels(outputStream, image))
+		{
+			return false;
+		}
+
+		outputStream.close();
+		return !outputStream.fail();
 	}
 }
