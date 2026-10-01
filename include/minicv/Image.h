@@ -21,6 +21,14 @@ namespace minicv
 		explicit Image(const Size size);
 		Image(const Size size, const EImageType imageType);
 
+		Image(const Image& other) = default;
+		/** Copy assignment preserves the current value if allocation fails. */
+		Image& operator=(const Image& other);
+
+		/** Moving leaves the source empty with size 0 x 0; self-move preserves its value. */
+		Image(Image&& other) noexcept;
+		Image& operator=(Image&& other) noexcept;
+
 		void Create(const int width, const int height);
 		void Create(const int width, const int height, const EImageType imageType);
 		void Create(const Size size);

@@ -3,6 +3,7 @@
 #include <cstddef>
 #include <cstring>
 #include <limits>
+#include <utility>
 
 #include "minicv/Image.h"
 
@@ -82,6 +83,45 @@ namespace minicv
 	Image::Image(const Size size, const EImageType imageType)
 		: Image(size.Width, size.Height, imageType)
 	{
+	}
+
+	Image::Image(Image&& other) noexcept
+		: mWidth(std::exchange(other.mWidth, 0))
+		, mHeight(std::exchange(other.mHeight, 0))
+		, mChannelCount(other.mChannelCount)
+		, mBytesPerRow(std::exchange(other.mBytesPerRow, 0))
+		, mImageType(other.mImageType)
+		, mPixels(std::move(other.mPixels))
+	{
+		other.mPixels.clear();
+	}
+
+	Image& Image::operator=(const Image& other)
+	{
+		if (this == &other)
+		{
+			return *this;
+		}
+
+		Image copied(other);
+		return *this = std::move(copied);
+	}
+
+	Image& Image::operator=(Image&& other) noexcept
+	{
+		if (this == &other)
+		{
+			return *this;
+		}
+
+		mWidth = std::exchange(other.mWidth, 0);
+		mHeight = std::exchange(other.mHeight, 0);
+		mChannelCount = other.mChannelCount;
+		mBytesPerRow = std::exchange(other.mBytesPerRow, 0);
+		mImageType = other.mImageType;
+		mPixels = std::move(other.mPixels);
+		other.mPixels.clear();
+		return *this;
 	}
 
 	void Image::Create(const int width, const int height)

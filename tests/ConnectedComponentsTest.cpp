@@ -4,6 +4,7 @@
 #include <cstddef>
 #include <cstdint>
 #include <initializer_list>
+#include <utility>
 
 #include "ConnectedComponentsTest.h"
 #include "minicv/ConnectedComponents.h"
@@ -11,6 +12,54 @@
 
 namespace
 {
+	void TestMoveSemantics()
+	{
+		minicv::Image image(2, 3);
+		image.Fill(1);
+		minicv::ConnectedComponents source(image, minicv::EConnectivity::FOUR);
+		minicv::ConnectedComponents moved(std::move(source));
+		assert(moved.GetWidth() == 2 && moved.GetHeight() == 3);
+		assert(moved.GetLabel(1, 2) == 1);
+		assert(moved.GetComponentCount() == 1);
+		assert(moved.GetComponents()[0].Area == 6);
+		assert(source.IsEmpty());
+		assert(source.GetWidth() == 0 && source.GetHeight() == 0);
+		assert(source.GetComponentCount() == 0);
+
+		minicv::ConnectedComponents destination(minicv::Image(1, 1), minicv::EConnectivity::EIGHT);
+		destination = std::move(moved);
+		assert(destination.GetWidth() == 2 && destination.GetHeight() == 3);
+		assert(destination.GetLabel(1, 2) == 1);
+		assert(destination.GetComponentCount() == 1);
+		assert(destination.GetComponents()[0].Area == 6);
+		assert(moved.IsEmpty());
+		assert(moved.GetWidth() == 0 && moved.GetHeight() == 0);
+		assert(moved.GetComponentCount() == 0);
+
+		const minicv::ConnectedComponents emptyMoved(std::move(moved));
+		assert(emptyMoved.IsEmpty() && emptyMoved.GetWidth() == 0 && emptyMoved.GetHeight() == 0);
+		assert(moved.IsEmpty() && moved.GetWidth() == 0 && moved.GetHeight() == 0);
+
+		minicv::ConnectedComponents* const alias = &destination;
+		destination = std::move(*alias);
+		assert(destination.GetWidth() == 2 && destination.GetHeight() == 3);
+		assert(destination.GetLabel(1, 2) == 1);
+		assert(destination.GetComponentCount() == 1);
+		assert(destination.GetComponents()[0].Area == 6);
+
+		const minicv::ConnectedComponents copied(destination);
+		source = copied;
+		assert(copied.GetWidth() == 2 && copied.GetHeight() == 3);
+		assert(copied.GetLabel(1, 2) == 1);
+		assert(copied.GetComponentCount() == 1);
+		assert(copied.GetComponents()[0].Area == 6);
+		assert(source.GetWidth() == 2 && source.GetHeight() == 3);
+		assert(source.GetLabel(1, 2) == 1);
+		assert(source.GetComponentCount() == 1);
+		assert(source.GetComponents()[0].Area == 6);
+	}
+
+
 	constexpr double COMPARISON_TOLERANCE = 1e-12;
 
 	void AssertComponentEqual(const minicv::ConnectedComponent& actual, const minicv::ConnectedComponent& expected)
@@ -192,6 +241,7 @@ namespace
 
 void RunConnectedComponentsTests()
 {
+	TestMoveSemantics();
 	TestEmptyShapesArePreserved();
 	TestBackgroundHasNoComponentsButIsNotEmpty();
 	TestDiagonalConnectivityChangesComponentCount();

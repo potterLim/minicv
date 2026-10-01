@@ -1,11 +1,46 @@
 #include <cassert>
 #include <limits>
+#include <utility>
 
 #include "GrayscaleFilterResponseTest.h"
 #include "minicv/GrayscaleFilterResponse.h"
 
 namespace
 {
+	void TestMoveSemantics()
+	{
+		minicv::GrayscaleFilterResponse source(minicv::Size{ 2, 3 });
+		source.GetResponseValue(1, 2) = -12.5;
+		minicv::GrayscaleFilterResponse moved(std::move(source));
+		assert(moved.GetWidth() == 2 && moved.GetHeight() == 3);
+		assert(moved.GetResponseValue(1, 2) == -12.5);
+		assert(source.IsEmpty());
+		assert(source.GetWidth() == 0 && source.GetHeight() == 0);
+
+		minicv::GrayscaleFilterResponse destination(minicv::Size{ 1, 1 });
+		destination = std::move(moved);
+		assert(destination.GetWidth() == 2 && destination.GetHeight() == 3);
+		assert(destination.GetResponseValue(1, 2) == -12.5);
+		assert(moved.IsEmpty());
+		assert(moved.GetWidth() == 0 && moved.GetHeight() == 0);
+
+		const minicv::GrayscaleFilterResponse emptyMoved(std::move(moved));
+		assert(emptyMoved.IsEmpty() && emptyMoved.GetWidth() == 0 && emptyMoved.GetHeight() == 0);
+		assert(moved.IsEmpty() && moved.GetWidth() == 0 && moved.GetHeight() == 0);
+
+		minicv::GrayscaleFilterResponse* const alias = &destination;
+		destination = std::move(*alias);
+		assert(destination.GetWidth() == 2 && destination.GetHeight() == 3);
+		assert(destination.GetResponseValue(1, 2) == -12.5);
+
+		const minicv::GrayscaleFilterResponse copied(destination);
+		source = copied;
+		assert(copied.GetWidth() == 2 && copied.GetHeight() == 3);
+		assert(copied.GetResponseValue(1, 2) == -12.5);
+		assert(source.GetWidth() == 2 && source.GetHeight() == 3);
+		assert(source.GetResponseValue(1, 2) == -12.5);
+	}
+
 	void TestGrayscaleFilterResponsePropertiesAndValueAccess()
 	{
 		minicv::GrayscaleFilterResponse response(minicv::Size{ 3, 2 });
@@ -43,6 +78,7 @@ namespace
 
 void RunGrayscaleFilterResponseTests()
 {
+	TestMoveSemantics();
 	TestGrayscaleFilterResponsePropertiesAndValueAccess();
 	TestGrayscaleFilterResponsePreservesEmptySize();
 }

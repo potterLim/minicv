@@ -1,5 +1,6 @@
 #include <cassert>
 #include <cstdint>
+#include <utility>
 #include <vector>
 
 #include "StructuringElementTest.h"
@@ -8,6 +9,40 @@
 
 namespace
 {
+	void TestMoveSemantics()
+	{
+		minicv::StructuringElement source(minicv::Size{ 3, 1 }, { 0, 1, 0 });
+		minicv::StructuringElement moved(std::move(source));
+		assert(moved.GetWidth() == 3 && moved.GetHeight() == 1);
+		assert(moved.IsActive(1, 0));
+		assert(moved.IsActive(0, 0) == false);
+		assert(source.GetWidth() == 1 && source.GetHeight() == 1);
+		assert(source.IsActive(0, 0));
+
+		minicv::StructuringElement destination(minicv::Size{ 1, 1 }, { 1 });
+		destination = std::move(moved);
+		assert(destination.GetWidth() == 3 && destination.GetHeight() == 1);
+		assert(destination.IsActive(1, 0));
+		assert(destination.IsActive(0, 0) == false);
+		assert(moved.GetWidth() == 1 && moved.GetHeight() == 1);
+		assert(moved.IsActive(0, 0));
+
+		minicv::StructuringElement* const alias = &destination;
+		destination = std::move(*alias);
+		assert(destination.GetWidth() == 3 && destination.GetHeight() == 1);
+		assert(destination.IsActive(1, 0));
+		assert(destination.IsActive(0, 0) == false);
+
+		const minicv::StructuringElement copied(destination);
+		source = copied;
+		assert(copied.GetWidth() == 3 && copied.GetHeight() == 1);
+		assert(copied.IsActive(1, 0));
+		assert(copied.IsActive(0, 0) == false);
+		assert(source.GetWidth() == 3 && source.GetHeight() == 1);
+		assert(source.IsActive(1, 0));
+		assert(source.IsActive(0, 0) == false);
+	}
+
 	void TestStructuringElementStoresSizeAndRowMajorMask()
 	{
 		std::vector<std::uint8_t> maskValues{ 0, 2, 0, 255, 0, 0, 0, 0, 1 };
@@ -65,6 +100,7 @@ namespace
 
 void RunStructuringElementTests()
 {
+	TestMoveSemantics();
 	TestStructuringElementStoresSizeAndRowMajorMask();
 	TestRectangularStructuringElementActivatesEveryPosition();
 	TestCrossStructuringElementActivatesOnlyCentralAxes();

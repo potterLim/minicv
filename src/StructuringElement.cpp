@@ -51,6 +51,31 @@ namespace minicv
 		static_cast<void>(hasActivePosition);
 	}
 
+	StructuringElement::StructuringElement(StructuringElement&& other)
+		: StructuringElement(Size{ 1, 1 }, { 1 })
+	{
+		*this = std::move(other);
+	}
+
+	StructuringElement& StructuringElement::operator=(const StructuringElement& other)
+	{
+		if (this == &other)
+		{
+			return *this;
+		}
+
+		StructuringElement copied(other);
+		return *this = std::move(copied);
+	}
+
+	StructuringElement& StructuringElement::operator=(StructuringElement&& other) noexcept
+	{
+		std::swap(mWidth, other.mWidth);
+		std::swap(mHeight, other.mHeight);
+		mMaskValues.swap(other.mMaskValues);
+		return *this;
+	}
+
 	int StructuringElement::GetWidth() const
 	{
 		return mWidth;

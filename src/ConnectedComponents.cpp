@@ -2,6 +2,7 @@
 #include <array>
 #include <cassert>
 #include <cstddef>
+#include <utility>
 #include <vector>
 
 #include "minicv/ConnectedComponents.h"
@@ -117,6 +118,43 @@ namespace minicv
 				mComponents.push_back(AnalyzeComponent(grayscaleImage, connectivity, position, label, &mLabels, &pendingPixels));
 			}
 		}
+	}
+
+	ConnectedComponents::ConnectedComponents(ConnectedComponents&& other) noexcept
+		: mWidth(std::exchange(other.mWidth, 0))
+		, mHeight(std::exchange(other.mHeight, 0))
+		, mLabels(std::move(other.mLabels))
+		, mComponents(std::move(other.mComponents))
+	{
+		other.mLabels.clear();
+		other.mComponents.clear();
+	}
+
+	ConnectedComponents& ConnectedComponents::operator=(const ConnectedComponents& other)
+	{
+		if (this == &other)
+		{
+			return *this;
+		}
+
+		ConnectedComponents copied(other);
+		return *this = std::move(copied);
+	}
+
+	ConnectedComponents& ConnectedComponents::operator=(ConnectedComponents&& other) noexcept
+	{
+		if (this == &other)
+		{
+			return *this;
+		}
+
+		mWidth = std::exchange(other.mWidth, 0);
+		mHeight = std::exchange(other.mHeight, 0);
+		mLabels = std::move(other.mLabels);
+		mComponents = std::move(other.mComponents);
+		other.mLabels.clear();
+		other.mComponents.clear();
+		return *this;
 	}
 
 	bool ConnectedComponents::IsEmpty() const

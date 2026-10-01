@@ -46,6 +46,31 @@ namespace minicv
 		}
 	}
 
+	ConvolutionKernel::ConvolutionKernel(ConvolutionKernel&& other)
+		: ConvolutionKernel(Size{ 1, 1 }, { 1 })
+	{
+		*this = std::move(other);
+	}
+
+	ConvolutionKernel& ConvolutionKernel::operator=(const ConvolutionKernel& other)
+	{
+		if (this == &other)
+		{
+			return *this;
+		}
+
+		ConvolutionKernel copied(other);
+		return *this = std::move(copied);
+	}
+
+	ConvolutionKernel& ConvolutionKernel::operator=(ConvolutionKernel&& other) noexcept
+	{
+		std::swap(mWidth, other.mWidth);
+		std::swap(mHeight, other.mHeight);
+		mCoefficients.swap(other.mCoefficients);
+		return *this;
+	}
+
 	int ConvolutionKernel::GetWidth() const
 	{
 		return mWidth;

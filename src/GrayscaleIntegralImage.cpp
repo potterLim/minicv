@@ -2,6 +2,7 @@
 #include <cstddef>
 #include <cstdint>
 #include <limits>
+#include <utility>
 
 #include "minicv/GrayscaleIntegralImage.h"
 #include "minicv/Image.h"
@@ -107,6 +108,41 @@ namespace minicv
 				mIntegralValues[currentIntegralIndex] = currentRowSum + mIntegralValues[previousIntegralIndex];
 			}
 		}
+	}
+
+	GrayscaleIntegralImage::GrayscaleIntegralImage(GrayscaleIntegralImage&& other) noexcept
+		: mWidth(std::exchange(other.mWidth, 0))
+		, mHeight(std::exchange(other.mHeight, 0))
+		, mValuesPerRow(std::exchange(other.mValuesPerRow, 1))
+		, mIntegralValues(std::move(other.mIntegralValues))
+	{
+		other.mIntegralValues.clear();
+	}
+
+	GrayscaleIntegralImage& GrayscaleIntegralImage::operator=(const GrayscaleIntegralImage& other)
+	{
+		if (this == &other)
+		{
+			return *this;
+		}
+
+		GrayscaleIntegralImage copied(other);
+		return *this = std::move(copied);
+	}
+
+	GrayscaleIntegralImage& GrayscaleIntegralImage::operator=(GrayscaleIntegralImage&& other) noexcept
+	{
+		if (this == &other)
+		{
+			return *this;
+		}
+
+		mWidth = std::exchange(other.mWidth, 0);
+		mHeight = std::exchange(other.mHeight, 0);
+		mValuesPerRow = std::exchange(other.mValuesPerRow, 1);
+		mIntegralValues = std::move(other.mIntegralValues);
+		other.mIntegralValues.clear();
+		return *this;
 	}
 
 	bool GrayscaleIntegralImage::IsEmpty() const

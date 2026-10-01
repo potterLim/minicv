@@ -113,13 +113,19 @@ if(MINICV_BUILD_TESTS)
 
         minicv_enable_warnings(minicv_tests)
 
+        # Isolate allocation fault injection from the regular test executable.
+        add_executable(minicv_copy_assignment_tests tests/CopyAssignmentTest.cpp)
+        target_link_libraries(minicv_copy_assignment_tests PRIVATE miniCV::miniCV)
+        minicv_enable_warnings(minicv_copy_assignment_tests)
+
         # Test checks must execute in every configuration, including Release.
-        foreach(test_target IN ITEMS minicv_tests)
+        foreach(test_target IN ITEMS minicv_tests minicv_copy_assignment_tests)
             target_compile_options(${test_target} PRIVATE
                 $<$<CXX_COMPILER_ID:MSVC>:/UNDEBUG>
                 $<$<NOT:$<CXX_COMPILER_ID:MSVC>>:-UNDEBUG>
             )
         endforeach()
+        add_test(NAME minicv.copy_assignment COMMAND minicv_copy_assignment_tests)
 
         add_test(
             NAME minicv.tests

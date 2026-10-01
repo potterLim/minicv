@@ -2,12 +2,60 @@
 #include <cstddef>
 #include <cstdint>
 #include <limits>
+#include <utility>
 
 #include "ImageTest.h"
 #include "minicv/Image.h"
 
 namespace
 {
+	void TestMoveSemantics()
+	{
+		minicv::Image source(2, 3, minicv::EImageType::UINT8_RGB);
+		source.FillRgb(10, 20, 30);
+		minicv::Image moved(std::move(source));
+		assert(moved.GetWidth() == 2 && moved.GetHeight() == 3);
+		assert(moved.GetRgbPixel(1, 2, minicv::ERgbChannel::RED) == 10);
+		assert(moved.GetByteCount() == 18);
+		assert(source.IsEmpty());
+		assert(source.GetWidth() == 0 && source.GetHeight() == 0);
+		assert(!source.Contains(minicv::Point{ 0, 0 }));
+		assert(source.GetByteCount() == 0 && source.GetBytesPerRow() == 0);
+		source.Fill(9);
+		assert(source.Clone().IsEmpty());
+
+		minicv::Image destination(1, 1);
+		destination = std::move(moved);
+		assert(destination.GetWidth() == 2 && destination.GetHeight() == 3);
+		assert(destination.GetRgbPixel(1, 2, minicv::ERgbChannel::RED) == 10);
+		assert(destination.GetByteCount() == 18);
+		assert(moved.IsEmpty());
+		assert(moved.GetWidth() == 0 && moved.GetHeight() == 0);
+		assert(!moved.Contains(minicv::Point{ 0, 0 }));
+		assert(moved.GetByteCount() == 0 && moved.GetBytesPerRow() == 0);
+		moved.Fill(9);
+		assert(moved.Clone().IsEmpty());
+
+		const minicv::Image emptyMoved(std::move(moved));
+		assert(emptyMoved.IsEmpty() && emptyMoved.GetWidth() == 0 && emptyMoved.GetHeight() == 0);
+		assert(moved.IsEmpty() && moved.GetWidth() == 0 && moved.GetHeight() == 0);
+
+		minicv::Image* const alias = &destination;
+		destination = std::move(*alias);
+		assert(destination.GetWidth() == 2 && destination.GetHeight() == 3);
+		assert(destination.GetRgbPixel(1, 2, minicv::ERgbChannel::RED) == 10);
+		assert(destination.GetByteCount() == 18);
+
+		const minicv::Image copied(destination);
+		source = copied;
+		assert(copied.GetWidth() == 2 && copied.GetHeight() == 3);
+		assert(copied.GetRgbPixel(1, 2, minicv::ERgbChannel::RED) == 10);
+		assert(copied.GetByteCount() == 18);
+		assert(source.GetWidth() == 2 && source.GetHeight() == 3);
+		assert(source.GetRgbPixel(1, 2, minicv::ERgbChannel::RED) == 10);
+		assert(source.GetByteCount() == 18);
+	}
+
 	void TestDefaultConstructor()
 	{
 		const minicv::Image image;
@@ -413,6 +461,7 @@ namespace
 
 void RunImageTests()
 {
+	TestMoveSemantics();
 	TestDefaultConstructor();
 	TestGrayscaleConstructor();
 	TestRgbConstructor();

@@ -17,6 +17,14 @@ namespace minicv
 		 */
 		StructuringElement(const Size size, std::vector<std::uint8_t> maskValues);
 
+		StructuringElement(const StructuringElement& other) = default;
+		/** Copy assignment preserves the current value if allocation fails. */
+		StructuringElement& operator=(const StructuringElement& other);
+
+		/** Move construction leaves a 1 x 1 identity; move assignment swaps valid values. */
+		StructuringElement(StructuringElement&& other);
+		StructuringElement& operator=(StructuringElement&& other) noexcept;
+
 		[[nodiscard]] int GetWidth() const;
 		[[nodiscard]] int GetHeight() const;
 		[[nodiscard]] Size GetSize() const;

@@ -1,6 +1,7 @@
 #include <cassert>
 #include <cstddef>
 #include <limits>
+#include <utility>
 
 #include "minicv/GrayscaleFilterResponse.h"
 
@@ -30,6 +31,39 @@ namespace minicv
 		assert(responseValueCount <= mResponseValues.max_size() && "response value count exceeds maximum vector size.");
 
 		mResponseValues.resize(responseValueCount);
+	}
+
+	GrayscaleFilterResponse::GrayscaleFilterResponse(GrayscaleFilterResponse&& other) noexcept
+		: mWidth(std::exchange(other.mWidth, 0))
+		, mHeight(std::exchange(other.mHeight, 0))
+		, mResponseValues(std::move(other.mResponseValues))
+	{
+		other.mResponseValues.clear();
+	}
+
+	GrayscaleFilterResponse& GrayscaleFilterResponse::operator=(const GrayscaleFilterResponse& other)
+	{
+		if (this == &other)
+		{
+			return *this;
+		}
+
+		GrayscaleFilterResponse copied(other);
+		return *this = std::move(copied);
+	}
+
+	GrayscaleFilterResponse& GrayscaleFilterResponse::operator=(GrayscaleFilterResponse&& other) noexcept
+	{
+		if (this == &other)
+		{
+			return *this;
+		}
+
+		mWidth = std::exchange(other.mWidth, 0);
+		mHeight = std::exchange(other.mHeight, 0);
+		mResponseValues = std::move(other.mResponseValues);
+		other.mResponseValues.clear();
+		return *this;
 	}
 
 	bool GrayscaleFilterResponse::IsEmpty() const
