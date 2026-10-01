@@ -25,7 +25,7 @@ namespace
 		const bool doesPixelCountMatch = image.GetPixelCount() == PIXEL_COUNT;
 		assert(doesPixelCountMatch);
 
-		(void)doesPixelCountMatch;
+		static_cast<void>(doesPixelCountMatch);
 
 		for (std::size_t pixelIndex = 0; pixelIndex < PIXEL_COUNT; ++pixelIndex)
 		{
@@ -39,14 +39,14 @@ namespace
 		const bool doesPixelCountMatch = image.GetPixelCount() == PIXEL_COUNT;
 		assert(doesPixelCountMatch);
 
-		(void)doesPixelCountMatch;
+		static_cast<void>(doesPixelCountMatch);
 
 		for (std::size_t pixelIndex = 0; pixelIndex < PIXEL_COUNT; ++pixelIndex)
 		{
 			const bool isPixelValueEqual = image.GetPixelData()[pixelIndex] == expectedPixelValues[pixelIndex];
 			assert(isPixelValueEqual);
 
-			(void)isPixelValueEqual;
+			static_cast<void>(isPixelValueEqual);
 		}
 	}
 
@@ -57,7 +57,7 @@ namespace
 		const bool doesResponseValueCountMatch = responseValueCount == RESPONSE_VALUE_COUNT;
 		assert(doesResponseValueCountMatch);
 
-		(void)doesResponseValueCountMatch;
+		static_cast<void>(doesResponseValueCountMatch);
 
 		const std::size_t responseWidth = static_cast<std::size_t>(response.GetWidth());
 
@@ -79,7 +79,7 @@ namespace
 		const bool doesResponseValueCountMatch = responseValueCount == RESPONSE_VALUE_COUNT;
 		assert(doesResponseValueCountMatch);
 
-		(void)doesResponseValueCountMatch;
+		static_cast<void>(doesResponseValueCountMatch);
 
 		const std::size_t responseWidth = static_cast<std::size_t>(response.GetWidth());
 
@@ -91,7 +91,7 @@ namespace
 			const bool isResponseValueEqual = std::abs(responseValue - expectedResponseValues[responseValueIndex]) <= COMPARISON_TOLERANCE;
 			assert(isResponseValueEqual);
 
-			(void)isResponseValueEqual;
+			static_cast<void>(isResponseValueEqual);
 		}
 	}
 
@@ -107,7 +107,7 @@ namespace
 
 		assert(isContentEqual);
 
-		(void)isContentEqual;
+		static_cast<void>(isContentEqual);
 	}
 
 	void TestConvolutionFlipsKernelHorizontallyAndVertically()
@@ -247,9 +247,9 @@ namespace
 		assert(kernel.GetCoefficient(1, 1) > kernel.GetCoefficient(1, 0));
 		assert(kernel.GetCoefficient(1, 0) > kernel.GetCoefficient(0, 0));
 
-		(void)isCoefficientSumNormalized;
-		(void)areCornerCoefficientsEqual;
-		(void)areEdgeCoefficientsEqual;
+		static_cast<void>(isCoefficientSumNormalized);
+		static_cast<void>(areCornerCoefficientsEqual);
+		static_cast<void>(areEdgeCoefficientsEqual);
 	}
 
 	void TestGaussianBlurProducesExpectedImpulseResponse()

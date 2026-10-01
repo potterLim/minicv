@@ -35,14 +35,14 @@ namespace minicv
 		const std::size_t expectedCoefficientCount = CalculateCoefficientCount(mWidth, mHeight);
 		assert(mCoefficients.size() == expectedCoefficientCount && "kernel coefficient count must match kernel size.");
 
-		(void)expectedCoefficientCount;
+		static_cast<void>(expectedCoefficientCount);
 
 		for (const double coefficient : mCoefficients)
 		{
 			const bool isCoefficientFinite = std::isfinite(coefficient);
 			assert(isCoefficientFinite && "kernel coefficients must be finite.");
 
-			(void)isCoefficientFinite;
+			static_cast<void>(isCoefficientFinite);
 		}
 	}
 

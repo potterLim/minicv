@@ -40,9 +40,9 @@ namespace
 		assert(isGreenEqual);
 		assert(isBlueEqual);
 
-		(void)isRedEqual;
-		(void)isGreenEqual;
-		(void)isBlueEqual;
+		static_cast<void>(isRedEqual);
+		static_cast<void>(isGreenEqual);
+		static_cast<void>(isBlueEqual);
 	}
 
 	void AssertHistogramBinCount(
@@ -55,7 +55,7 @@ namespace
 
 		assert(isBinCountEqual);
 
-		(void)isBinCountEqual;
+		static_cast<void>(isBinCountEqual);
 	}
 
 	void AssertCumulativeDistributionValue(
@@ -68,7 +68,7 @@ namespace
 
 		assert(isValueEqual);
 
-		(void)isValueEqual;
+		static_cast<void>(isValueEqual);
 	}
 
 	void AssertCumulativeDistributionIsValid(const minicv::GrayscaleCumulativeDistribution& cumulativeDistribution)
@@ -83,8 +83,8 @@ namespace
 			assert(isValueInRange);
 			assert(isNonDecreasing);
 
-			(void)isValueInRange;
-			(void)isNonDecreasing;
+			static_cast<void>(isValueInRange);
+			static_cast<void>(isNonDecreasing);
 
 			previousValue = cumulativeValue;
 		}
@@ -101,8 +101,8 @@ namespace
 		assert(isWidthEqual);
 		assert(isHeightEqual);
 
-		(void)isWidthEqual;
-		(void)isHeightEqual;
+		static_cast<void>(isWidthEqual);
+		static_cast<void>(isHeightEqual);
 
 		for (std::size_t pixelIndex = 0; pixelIndex < PIXEL_COUNT; ++pixelIndex)
 		{
@@ -111,7 +111,7 @@ namespace
 
 			assert(isPixelEqual);
 
-			(void)isPixelEqual;
+			static_cast<void>(isPixelEqual);
 		}
 	}
 
@@ -418,7 +418,7 @@ namespace
 		assert(invertedImage.GetGrayscalePixel(2, 0) == 0);
 		assert(image.GetGrayscalePixel(1, 0) == 127);
 
-		(void)invertedImage;
+		static_cast<void>(invertedImage);
 	}
 
 	void TestAdjustImageBrightness()
@@ -444,8 +444,8 @@ namespace
 
 		assert(image.GetGrayscalePixel(2, 0) == 240);
 
-		(void)brighterImage;
-		(void)darkerImage;
+		static_cast<void>(brighterImage);
+		static_cast<void>(darkerImage);
 	}
 
 	void TestAdjustImageBrightnessWithExtremeOffsets()
@@ -464,8 +464,8 @@ namespace
 		assert(image.GetGrayscalePixel(0, 0) == 0);
 		assert(image.GetGrayscalePixel(1, 0) == 255);
 
-		(void)maximumBrightnessImage;
-		(void)minimumBrightnessImage;
+		static_cast<void>(maximumBrightnessImage);
+		static_cast<void>(minimumBrightnessImage);
 	}
 
 	void TestAdjustImageContrast()
@@ -493,9 +493,9 @@ namespace
 			assert(zeroContrastImage.GetGrayscalePixel(x, 0) == 0);
 		}
 
-		(void)identityImage;
-		(void)increasedContrastImage;
-		(void)zeroContrastImage;
+		static_cast<void>(identityImage);
+		static_cast<void>(increasedContrastImage);
+		static_cast<void>(zeroContrastImage);
 	}
 
 	void TestPixelValueOperationsWithRgbImage()
@@ -529,9 +529,9 @@ namespace
 		assert(contrastImage.IsEmpty());
 		assert(contrastImage.GetImageType() == minicv::EImageType::UINT8_RGB);
 
-		(void)invertedImage;
-		(void)brighterImage;
-		(void)contrastImage;
+		static_cast<void>(invertedImage);
+		static_cast<void>(brighterImage);
+		static_cast<void>(contrastImage);
 	}
 
 	void TestCalculateGrayscaleHistogram()
@@ -561,7 +561,7 @@ namespace
 
 		assert(totalPixelCount == image.GetPixelCount());
 
-		(void)totalPixelCount;
+		static_cast<void>(totalPixelCount);
 	}
 
 	void TestCalculateGrayscaleHistogramFromEmptyImage()
@@ -573,7 +573,7 @@ namespace
 		{
 			const bool isBinEmpty = binCount == 0;
 			assert(isBinEmpty);
-			(void)isBinEmpty;
+			static_cast<void>(isBinEmpty);
 		}
 	}
 
@@ -603,7 +603,7 @@ namespace
 		{
 			const bool isValueZero = cumulativeValue == 0.0;
 			assert(isValueZero);
-			(void)isValueZero;
+			static_cast<void>(isValueZero);
 		}
 
 		AssertCumulativeDistributionIsValid(cumulativeDistribution);
@@ -625,8 +625,8 @@ namespace
 		assert(valueRange->Maximum == 255);
 		assert(!emptyValueRange.has_value());
 
-		(void)valueRange;
-		(void)emptyValueRange;
+		static_cast<void>(valueRange);
+		static_cast<void>(emptyValueRange);
 	}
 
 	void TestCreateMinMaxNormalizedGrayscaleImage()
@@ -650,7 +650,7 @@ namespace
 		assert(normalizedImage.GetGrayscalePixel(4, 0) == 255);
 		assert(image.GetGrayscalePixel(2, 0) == 15);
 
-		(void)normalizedImage;
+		static_cast<void>(normalizedImage);
 	}
 
 	void TestCreateMinMaxNormalizedGrayscaleImageFromConstantImage()
@@ -669,10 +669,10 @@ namespace
 		{
 			const bool isPixelZero = normalizedImage.GetPixelData()[pixelIndex] == 0;
 			assert(isPixelZero);
-			(void)isPixelZero;
+			static_cast<void>(isPixelZero);
 		}
 
-		(void)valueRange;
+		static_cast<void>(valueRange);
 	}
 
 	void TestCreateMinMaxNormalizedGrayscaleImageFromEmptyImage()
@@ -683,7 +683,7 @@ namespace
 		assert(normalizedImage.IsEmpty());
 		assert(normalizedImage.GetImageType() == minicv::EImageType::UINT8_GRAYSCALE);
 
-		(void)normalizedImage;
+		static_cast<void>(normalizedImage);
 	}
 
 	void TestGrayscaleHistogramAndNormalizationFlow()
@@ -726,9 +726,9 @@ namespace
 		AssertHistogramBinCount(normalizedHistogram, 128, 1);
 		AssertHistogramBinCount(normalizedHistogram, 255, 1);
 
-		(void)sourceValueRange;
-		(void)normalizedImage;
-		(void)normalizedValueRange;
+		static_cast<void>(sourceValueRange);
+		static_cast<void>(normalizedImage);
+		static_cast<void>(normalizedValueRange);
 	}
 
 	void TestCreateContrastStretchedGrayscaleImage()
@@ -749,7 +749,7 @@ namespace
 		assert(stretchedImage.GetImageType() == minicv::EImageType::UINT8_GRAYSCALE);
 		assert(image.GetGrayscalePixel(2, 0) == 100);
 
-		(void)stretchedImage;
+		static_cast<void>(stretchedImage);
 	}
 
 	void TestCreateHistogramEqualizedGrayscaleImage()
@@ -767,7 +767,7 @@ namespace
 		assert(equalizedImage.GetImageType() == minicv::EImageType::UINT8_GRAYSCALE);
 		assert(image.GetGrayscalePixel(2, 0) == 100);
 
-		(void)equalizedImage;
+		static_cast<void>(equalizedImage);
 	}
 
 	void TestHistogramEqualizationRoundsFromPixelCounts()
@@ -807,7 +807,7 @@ namespace
 
 		assert(equalizedImage.HasSameContent(image));
 
-		(void)equalizedImage;
+		static_cast<void>(equalizedImage);
 	}
 
 	void TestCreateThresholdedGrayscaleImages()
@@ -855,9 +855,9 @@ namespace
 		assert(equalizedImage.GetImageType() == minicv::EImageType::UINT8_GRAYSCALE);
 		assert(thresholdedImage.GetImageType() == minicv::EImageType::UINT8_GRAYSCALE);
 
-		(void)stretchedImage;
-		(void)equalizedImage;
-		(void)thresholdedImage;
+		static_cast<void>(stretchedImage);
+		static_cast<void>(equalizedImage);
+		static_cast<void>(thresholdedImage);
 	}
 
 	void TestTryCalculateOtsuThreshold()
@@ -892,8 +892,8 @@ namespace
 		assert(*constantImageThreshold == 0);
 		assert(!emptyImageThreshold.has_value());
 
-		(void)constantImageThreshold;
-		(void)emptyImageThreshold;
+		static_cast<void>(constantImageThreshold);
+		static_cast<void>(emptyImageThreshold);
 	}
 
 	void TestCreateAdaptiveMeanThresholdedGrayscaleImages()
@@ -918,8 +918,8 @@ namespace
 				assert(binaryImage.GetGrayscalePixel(x, y) == expectedBinaryValue);
 				assert(invertedBinaryImage.GetGrayscalePixel(x, y) == expectedInvertedBinaryValue);
 
-				(void)expectedBinaryValue;
-				(void)expectedInvertedBinaryValue;
+				static_cast<void>(expectedBinaryValue);
+				static_cast<void>(expectedInvertedBinaryValue);
 			}
 		}
 
@@ -969,7 +969,7 @@ namespace
 		assert(thresholdedImage.IsEmpty());
 		assert(thresholdedImage.GetImageType() == minicv::EImageType::UINT8_GRAYSCALE);
 
-		(void)thresholdedImage;
+		static_cast<void>(thresholdedImage);
 	}
 
 	void TestColorAndChannelOperationsFromEmptyImages()

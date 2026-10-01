@@ -25,7 +25,7 @@ namespace
 		assert(kernel.GetCoefficient(0, 2) == 7.0);
 		assert(kernel.GetCoefficient(2, 2) == 9.0);
 
-		(void)kernelSize;
+		static_cast<void>(kernelSize);
 	}
 }
 

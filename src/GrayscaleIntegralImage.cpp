@@ -81,8 +81,8 @@ namespace minicv
 		const std::uint64_t maximumPixelCount = std::numeric_limits<std::uint64_t>::max() / MAX_PIXEL_VALUE;
 		assert(pixelCount <= maximumPixelCount && "integral image pixel sum overflow.");
 
-		(void)pixelCount;
-		(void)maximumPixelCount;
+		static_cast<void>(pixelCount);
+		static_cast<void>(maximumPixelCount);
 
 		mIntegralValues.resize(integralValueCount);
 

@@ -263,8 +263,8 @@ namespace minicv
 			const bool isBorderTypeSupported = IsSupportedBorderType(borderParameters.BorderType);
 			assert(isBorderTypeSupported && "border type must be CONSTANT or REPLICATE.");
 
-			(void)isImageGrayscale;
-			(void)isBorderTypeSupported;
+			static_cast<void>(isImageGrayscale);
+			static_cast<void>(isBorderTypeSupported);
 
 			GrayscaleFilterResponse response(grayscaleImage.GetSize());
 			if (grayscaleImage.IsEmpty())
@@ -295,7 +295,7 @@ namespace minicv
 		const bool isBorderTypeSupported = IsSupportedBorderType(borderParameters.BorderType);
 		assert(isBorderTypeSupported && "border type must be CONSTANT or REPLICATE.");
 
-		(void)isBorderTypeSupported;
+		static_cast<void>(isBorderTypeSupported);
 
 		Image convolvedImage(image.GetSize(), image.GetImageType());
 		if (image.IsEmpty())
@@ -344,7 +344,7 @@ namespace minicv
 		assert(isStandardDeviationFinite && "standard deviation must be finite.");
 		assert(standardDeviation > 0.0 && "standard deviation must be positive.");
 
-		(void)isStandardDeviationFinite;
+		static_cast<void>(isStandardDeviationFinite);
 
 		const std::size_t coefficientCount = CalculateKernelElementCount(kernelSize);
 		std::vector<double> coefficients = CreateKernelCoefficientBuffer(coefficientCount);
@@ -371,7 +371,7 @@ namespace minicv
 		const bool isCoefficientSumFinite = std::isfinite(coefficientSum);
 		assert(isCoefficientSumFinite && coefficientSum > 0.0 && "gaussian coefficient sum must be positive and finite.");
 
-		(void)isCoefficientSumFinite;
+		static_cast<void>(isCoefficientSumFinite);
 
 		for (double& coefficient : coefficients)
 		{
@@ -397,7 +397,7 @@ namespace minicv
 		const bool isBorderTypeSupported = IsSupportedBorderType(borderParameters.BorderType);
 		assert(isBorderTypeSupported && "border type must be CONSTANT or REPLICATE.");
 
-		(void)isBorderTypeSupported;
+		static_cast<void>(isBorderTypeSupported);
 
 		Image medianFilteredImage(image.GetSize(), image.GetImageType());
 		if (image.IsEmpty())
@@ -507,7 +507,7 @@ namespace minicv
 		const bool isResponseSizeEqual = sobelXResponse.GetWidth() == sobelYResponse.GetWidth() && sobelXResponse.GetHeight() == sobelYResponse.GetHeight();
 		assert(isResponseSizeEqual && "Sobel response sizes must match.");
 
-		(void)isResponseSizeEqual;
+		static_cast<void>(isResponseSizeEqual);
 
 		GrayscaleFilterResponse gradientMagnitudeResponse(sobelXResponse.GetSize());
 
@@ -520,13 +520,13 @@ namespace minicv
 				const bool isGradientFinite = std::isfinite(sobelXValue) && std::isfinite(sobelYValue);
 				assert(isGradientFinite && "Sobel response values must be finite.");
 
-				(void)isGradientFinite;
+				static_cast<void>(isGradientFinite);
 
 				const double magnitude = std::hypot(sobelXValue, sobelYValue);
 				const bool isMagnitudeFinite = std::isfinite(magnitude);
 				assert(isMagnitudeFinite && "gradient magnitude must be finite.");
 
-				(void)isMagnitudeFinite;
+				static_cast<void>(isMagnitudeFinite);
 
 				gradientMagnitudeResponse.GetResponseValue(x, y) = magnitude;
 			}
@@ -542,7 +542,7 @@ namespace minicv
 		const bool isResponseSizeEqual = sobelXResponse.GetWidth() == sobelYResponse.GetWidth() && sobelXResponse.GetHeight() == sobelYResponse.GetHeight();
 		assert(isResponseSizeEqual && "Sobel response sizes must match.");
 
-		(void)isResponseSizeEqual;
+		static_cast<void>(isResponseSizeEqual);
 
 		GrayscaleFilterResponse gradientDirectionResponse(sobelXResponse.GetSize());
 
@@ -555,7 +555,7 @@ namespace minicv
 				const bool isGradientFinite = std::isfinite(sobelXValue) && std::isfinite(sobelYValue);
 				assert(isGradientFinite && "Sobel response values must be finite.");
 
-				(void)isGradientFinite;
+				static_cast<void>(isGradientFinite);
 
 				const bool isZeroGradient = sobelXValue == 0.0 && sobelYValue == 0.0;
 				const double direction = isZeroGradient ? 0.0 : std::atan2(sobelYValue, sobelXValue);

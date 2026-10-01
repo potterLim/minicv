@@ -407,7 +407,7 @@ namespace
 
 		assert(image.HasSameContent(originalImage));
 
-		(void)originalImage;
+		static_cast<void>(originalImage);
 	}
 }
 

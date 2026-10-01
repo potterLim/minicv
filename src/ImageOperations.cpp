@@ -652,7 +652,7 @@ namespace minicv
 		assert(thresholdParameters.BlockSize % 2 == 1 && "block size must be odd.");
 		assert(std::isfinite(thresholdParameters.MeanOffset) && "mean offset must be finite.");
 
-		(void)isBinaryThresholdType;
+		static_cast<void>(isBinaryThresholdType);
 
 		Image thresholdedImage(grayscaleImage.GetSize(), EImageType::UINT8_GRAYSCALE);
 		if (grayscaleImage.IsEmpty())

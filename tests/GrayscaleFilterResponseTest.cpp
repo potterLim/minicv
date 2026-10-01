@@ -24,7 +24,7 @@ namespace
 		assert(constResponse.GetResponseValue(0, 0) == -12.5);
 		assert(constResponse.GetResponseValue(2, 1) == 300.25);
 
-		(void)constResponse;
+		static_cast<void>(constResponse);
 	}
 
 	void TestGrayscaleFilterResponsePreservesEmptySize()

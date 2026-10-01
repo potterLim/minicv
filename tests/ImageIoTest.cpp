@@ -119,7 +119,7 @@ namespace
 
 		const bool hasBinaryPgmMagicNumber = ReadMagicNumber(filePath) == "P5";
 		assert(hasBinaryPgmMagicNumber);
-		(void)hasBinaryPgmMagicNumber;
+		static_cast<void>(hasBinaryPgmMagicNumber);
 
 		const std::optional<minicv::Image> loadedImage = minicv::TryLoadImage(filePath);
 		assert(loadedImage.has_value());
@@ -139,7 +139,7 @@ namespace
 
 		const bool hasBinaryPpmMagicNumber = ReadMagicNumber(filePath) == "P6";
 		assert(hasBinaryPpmMagicNumber);
-		(void)hasBinaryPpmMagicNumber;
+		static_cast<void>(hasBinaryPpmMagicNumber);
 
 		const std::optional<minicv::Image> loadedImage = minicv::TryLoadImage(filePath);
 		assert(loadedImage.has_value());
