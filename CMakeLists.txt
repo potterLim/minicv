@@ -12,6 +12,8 @@ add_library(miniCV STATIC
     src/GrayscaleFilterResponse.cpp
     src/GrayscaleIntegralImage.cpp
     src/Image.cpp
+    src/ImageBorder.cpp
+    src/ImageBorder.h
     src/ImageFiltering.cpp
     src/ImageIo.cpp
     src/ImageMorphology.cpp

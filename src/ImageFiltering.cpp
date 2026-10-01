@@ -7,6 +7,7 @@
 #include <utility>
 #include <vector>
 
+#include "ImageBorder.h"
 #include "minicv/ConvolutionKernel.h"
 #include "minicv/ImageFiltering.h"
 
@@ -72,73 +73,6 @@ namespace minicv
 			return ConvolutionKernel(
 				Size{ 3, 3 },
 				std::vector<double>{ 1.0, 2.0, 1.0, 0.0, 0.0, 0.0, -1.0, -2.0, -1.0 });
-		}
-
-		bool IsInsideImage(const Image& image, const std::int64_t x, const std::int64_t y)
-		{
-			return x >= 0 && x < image.GetWidth() && y >= 0 && y < image.GetHeight();
-		}
-
-		int ClampImageCoordinate(const std::int64_t coordinate, const int imageLength)
-		{
-			assert(imageLength > 0 && "image length must be positive.");
-
-			if (coordinate < 0)
-			{
-				return 0;
-			}
-
-			const int maximumCoordinate = imageLength - 1;
-			if (coordinate > maximumCoordinate)
-			{
-				return maximumCoordinate;
-			}
-
-			return static_cast<int>(coordinate);
-		}
-
-		std::size_t CalculatePixelByteIndex(const Image& image, const int x, const int y, const std::size_t channelIndex)
-		{
-			const std::size_t rowOffset = static_cast<std::size_t>(y) * static_cast<std::size_t>(image.GetBytesPerRow());
-			const std::size_t columnOffset = static_cast<std::size_t>(x) * static_cast<std::size_t>(image.GetChannelCount());
-
-			return rowOffset + columnOffset + channelIndex;
-		}
-
-		std::uint8_t GetPixelValue(const Image& image, const int x, const int y, const std::size_t channelIndex)
-		{
-			const std::size_t pixelByteIndex = CalculatePixelByteIndex(image, x, y, channelIndex);
-			return image.GetPixelData()[pixelByteIndex];
-		}
-
-		std::uint8_t GetBorderedPixelValue(
-			const Image& image,
-			const std::int64_t x,
-			const std::int64_t y,
-			const std::size_t channelIndex,
-			const ImageBorderParameters borderParameters)
-		{
-			if (IsInsideImage(image, x, y))
-			{
-				return GetPixelValue(image, static_cast<int>(x), static_cast<int>(y), channelIndex);
-			}
-
-			switch (borderParameters.BorderType)
-			{
-			case EBorderType::CONSTANT:
-				return borderParameters.ConstantBorderValue;
-
-			case EBorderType::REPLICATE:
-			{
-				const int clampedX = ClampImageCoordinate(x, image.GetWidth());
-				const int clampedY = ClampImageCoordinate(y, image.GetHeight());
-				return GetPixelValue(image, clampedX, clampedY, channelIndex);
-			}
-
-			default:
-				assert(false && "unsupported border type.");
-				return 0;
-			}
 		}
 
 		std::uint8_t ClampAndRoundToByte(const double pixelValue)
@@ -242,7 +176,7 @@ namespace minicv
 				{
 					const std::int64_t sourceX = static_cast<std::int64_t>(x) + kernelCenterX - kernelX;
 					const std::int64_t sourceY = static_cast<std::int64_t>(y) + kernelCenterY - kernelY;
-					const std::uint8_t sourcePixelValue = GetBorderedPixelValue(image, sourceX, sourceY, channelIndex, borderParameters);
+					const std::uint8_t sourcePixelValue = detail::GetBorderedPixelValue(image, sourceX, sourceY, channelIndex, borderParameters);
 					const double coefficient = kernel.GetCoefficient(kernelX, kernelY);
 
 					convolvedPixelValue += static_cast<double>(sourcePixelValue) * coefficient;
@@ -313,7 +247,7 @@ namespace minicv
 				for (std::size_t channelIndex = 0; channelIndex < channelCount; ++channelIndex)
 				{
 					const double convolvedPixelValue = ConvolvePixelChannel(image, kernel, x, y, channelIndex, borderParameters);
-					const std::size_t pixelByteIndex = CalculatePixelByteIndex(convolvedImage, x, y, channelIndex);
+					const std::size_t pixelByteIndex = detail::CalculatePixelByteIndex(convolvedImage, x, y, channelIndex);
 
 					convolvedPixelData[pixelByteIndex] = ClampAndRoundToByte(convolvedPixelValue);
 				}
@@ -430,12 +364,12 @@ namespace minicv
 							const std::int64_t sourceX = static_cast<std::int64_t>(x) + kernelX - kernelCenterX;
 							const std::int64_t sourceY = static_cast<std::int64_t>(y) + kernelY - kernelCenterY;
 
-							neighborhoodPixelValues[neighborhoodPixelIndex] = GetBorderedPixelValue(image, sourceX, sourceY, channelIndex, borderParameters);
+							neighborhoodPixelValues[neighborhoodPixelIndex] = detail::GetBorderedPixelValue(image, sourceX, sourceY, channelIndex, borderParameters);
 							++neighborhoodPixelIndex;
 						}
 					}
 
-					const std::size_t pixelByteIndex = CalculatePixelByteIndex(medianFilteredImage, x, y, channelIndex);
+					const std::size_t pixelByteIndex = detail::CalculatePixelByteIndex(medianFilteredImage, x, y, channelIndex);
 					medianFilteredPixelData[pixelByteIndex] = SelectMedianPixelValue(neighborhoodPixelValues);
 				}
 			}

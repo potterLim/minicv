@@ -4,6 +4,7 @@
 #include <cstdint>
 #include <limits>
 
+#include "ImageBorder.h"
 #include "minicv/ImageMorphology.h"
 
 namespace minicv
@@ -15,44 +16,6 @@ namespace minicv
 			EROSION,
 			DILATION
 		};
-
-		std::size_t CalculatePixelByteIndex(const Image& image, const int x, const int y, const std::size_t channelIndex)
-		{
-			const std::size_t rowOffset = static_cast<std::size_t>(y) * static_cast<std::size_t>(image.GetBytesPerRow());
-			const std::size_t columnOffset = static_cast<std::size_t>(x) * static_cast<std::size_t>(image.GetChannelCount());
-			return rowOffset + columnOffset + channelIndex;
-		}
-
-		std::uint8_t GetBorderedPixelValue(
-			const Image& image,
-			const std::int64_t x,
-			const std::int64_t y,
-			const std::size_t channelIndex,
-			const ImageBorderParameters borderParameters)
-		{
-			const bool isInsideImage = x >= 0 && x < image.GetWidth() && y >= 0 && y < image.GetHeight();
-			if (isInsideImage)
-			{
-				const std::size_t pixelIndex = CalculatePixelByteIndex(image, static_cast<int>(x), static_cast<int>(y), channelIndex);
-				return image.GetPixelData()[pixelIndex];
-			}
-
-			switch (borderParameters.BorderType)
-			{
-			case EBorderType::CONSTANT:
-				return borderParameters.ConstantBorderValue;
-			case EBorderType::REPLICATE:
-			{
-				const int clampedX = static_cast<int>(std::clamp<std::int64_t>(x, 0, image.GetWidth() - 1));
-				const int clampedY = static_cast<int>(std::clamp<std::int64_t>(y, 0, image.GetHeight() - 1));
-				const std::size_t pixelIndex = CalculatePixelByteIndex(image, clampedX, clampedY, channelIndex);
-				return image.GetPixelData()[pixelIndex];
-			}
-			default:
-				assert(false && "unsupported border type.");
-				return 0;
-			}
-		}
 
 		Image CreateMorphologicalImage(
 			const Image& image,
@@ -96,12 +59,12 @@ namespace minicv
 
 								const std::int64_t sourceX = static_cast<std::int64_t>(x) + offsetDirection * (maskX - centerX);
 								const std::int64_t sourceY = static_cast<std::int64_t>(y) + offsetDirection * (maskY - centerY);
-								const std::uint8_t pixelValue = GetBorderedPixelValue(image, sourceX, sourceY, channelIndex, borderParameters);
+								const std::uint8_t pixelValue = detail::GetBorderedPixelValue(image, sourceX, sourceY, channelIndex, borderParameters);
 								selectedValue = isErosion ? std::min(selectedValue, pixelValue) : std::max(selectedValue, pixelValue);
 							}
 						}
 
-						const std::size_t pixelIndex = CalculatePixelByteIndex(processedImage, x, y, channelIndex);
+						const std::size_t pixelIndex = detail::CalculatePixelByteIndex(processedImage, x, y, channelIndex);
 						processedPixels[pixelIndex] = selectedValue;
 					}
 				}
