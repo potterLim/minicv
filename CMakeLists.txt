@@ -84,6 +84,8 @@ if(MINICV_BUILD_TESTS)
     if(BUILD_TESTING)
         add_executable(minicv_tests
             tests/main.cpp
+            tests/ConnectedComponentsTest.cpp
+            tests/ConnectedComponentsTest.h
             tests/ConvolutionKernelTest.cpp
             tests/ConvolutionKernelTest.h
             tests/GrayscaleFilterResponseTest.cpp

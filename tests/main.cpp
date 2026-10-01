@@ -1,3 +1,4 @@
+#include "ConnectedComponentsTest.h"
 #include "ConvolutionKernelTest.h"
 #include "GrayscaleFilterResponseTest.h"
 #include "GrayscaleIntegralImageTest.h"
@@ -10,6 +11,7 @@
 
 int main()
 {
+	RunConnectedComponentsTests();
 	RunConvolutionKernelTests();
 	RunGrayscaleFilterResponseTests();
 	RunImageTests();
