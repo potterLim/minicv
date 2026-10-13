@@ -71,9 +71,7 @@ namespace
 	}
 
 	template <std::size_t RESPONSE_VALUE_COUNT>
-	void AssertFilterResponseValuesEqual(
-		const minicv::GrayscaleFilterResponse& response,
-		const std::array<double, RESPONSE_VALUE_COUNT>& expectedResponseValues)
+	void AssertFilterResponseValuesEqual(const minicv::GrayscaleFilterResponse& response, const std::array<double, RESPONSE_VALUE_COUNT>& expectedResponseValues)
 	{
 		const std::size_t responseValueCount = static_cast<std::size_t>(response.GetWidth()) * static_cast<std::size_t>(response.GetHeight());
 		const bool doesResponseValueCountMatch = responseValueCount == RESPONSE_VALUE_COUNT;
@@ -113,16 +111,29 @@ namespace
 	void TestConvolutionFlipsKernelHorizontallyAndVertically()
 	{
 		minicv::Image image(3, 3);
-		SetGrayscalePixels(image, std::array<std::uint8_t, 9>{ 1, 2, 3, 4, 5, 6, 7, 8, 9 });
+		SetGrayscalePixels(image, std::array<std::uint8_t, 9>
+		{
+			1, 2, 3,
+			4, 5, 6,
+			7, 8, 9
+		});
 
-		const std::vector<double> coefficients{
-			1.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0
+		const std::vector<double> coefficients
+		{
+			1.0, 0.0, 0.0,
+			0.0, 0.0, 0.0,
+			0.0, 0.0, 0.0
 		};
 		const minicv::ConvolutionKernel kernel(minicv::Size{ 3, 3 }, coefficients);
 		const minicv::ImageBorderParameters borderParameters{ minicv::EBorderType::CONSTANT, 0 };
 		const minicv::Image convolvedImage = minicv::CreateConvolvedImage(image, kernel, borderParameters);
 
-		AssertGrayscalePixelsEqual(convolvedImage, std::array<std::uint8_t, 9>{ 5, 6, 0, 8, 9, 0, 0, 0, 0 });
+		AssertGrayscalePixelsEqual(convolvedImage, std::array<std::uint8_t, 9>
+		{
+			5, 6, 0,
+			8, 9, 0,
+			0, 0, 0
+		});
 	}
 
 	void TestConstantAndReplicateBordersProduceExpectedValues()
@@ -450,9 +461,14 @@ namespace
 		const minicv::GrayscaleFilterResponse gradientDirectionResponse = minicv::CreateGradientDirectionResponse(sobelXResponse, sobelYResponse);
 
 		AssertFilterResponseValuesEqual(gradientMagnitudeResponse, std::array<double, 5>{ 5.0, 5.0, 5.0, 5.0, 0.0 });
-		AssertFilterResponseValuesEqual(
-			gradientDirectionResponse,
-			std::array<double, 5>{ FIRST_QUADRANT_DIRECTION_RADIANS, HALF_PI_RADIANS, SECOND_QUADRANT_DIRECTION_RADIANS, -HALF_PI_RADIANS, 0.0 });
+		AssertFilterResponseValuesEqual(gradientDirectionResponse, std::array<double, 5>
+		{
+			FIRST_QUADRANT_DIRECTION_RADIANS,
+			HALF_PI_RADIANS,
+			SECOND_QUADRANT_DIRECTION_RADIANS,
+			-HALF_PI_RADIANS,
+			0.0
+		});
 	}
 
 	void TestGradientMagnitudeNormalizationMapsFullByteRange()
@@ -494,14 +510,10 @@ namespace
 		SetGrayscalePixels(columnImage, std::array<std::uint8_t, 3>{ 255, 128, 0 });
 		const minicv::ImageBorderParameters borderParameters{ minicv::EBorderType::REPLICATE, 99 };
 
-		AssertFilterResponseValuesEqual(minicv::CreateSobelXResponse(rowImage, borderParameters),
-			std::array<double, 3>{ -508.0, -1020.0, -512.0 });
-		AssertFilterResponseValuesEqual(minicv::CreateSobelYResponse(rowImage, borderParameters),
-			std::array<double, 3>{ 0.0, 0.0, 0.0 });
-		AssertFilterResponseValuesEqual(minicv::CreateSobelXResponse(columnImage, borderParameters),
-			std::array<double, 3>{ 0.0, 0.0, 0.0 });
-		AssertFilterResponseValuesEqual(minicv::CreateSobelYResponse(columnImage, borderParameters),
-			std::array<double, 3>{ -508.0, -1020.0, -512.0 });
+		AssertFilterResponseValuesEqual(minicv::CreateSobelXResponse(rowImage, borderParameters), std::array<double, 3>{ -508.0, -1020.0, -512.0 });
+		AssertFilterResponseValuesEqual(minicv::CreateSobelYResponse(rowImage, borderParameters), std::array<double, 3>{ 0.0, 0.0, 0.0 });
+		AssertFilterResponseValuesEqual(minicv::CreateSobelXResponse(columnImage, borderParameters), std::array<double, 3>{ 0.0, 0.0, 0.0 });
+		AssertFilterResponseValuesEqual(minicv::CreateSobelYResponse(columnImage, borderParameters), std::array<double, 3>{ -508.0, -1020.0, -512.0 });
 	}
 
 	void TestLaplacianBordersProduceExpectedCornerResponses()
@@ -511,10 +523,8 @@ namespace
 		const minicv::ImageBorderParameters constantBorderParameters{ minicv::EBorderType::CONSTANT, 5 };
 		const minicv::ImageBorderParameters replicateBorderParameters{ minicv::EBorderType::REPLICATE, 99 };
 
-		AssertFilterResponseValuesEqual(minicv::CreateLaplacianResponse(image, constantBorderParameters),
-			std::array<double, 4>{ 20.0, -20.0, -60.0, -100.0 });
-		AssertFilterResponseValuesEqual(minicv::CreateLaplacianResponse(image, replicateBorderParameters),
-			std::array<double, 4>{ 30.0, 10.0, -10.0, -30.0 });
+		AssertFilterResponseValuesEqual(minicv::CreateLaplacianResponse(image, constantBorderParameters), std::array<double, 4>{ 20.0, -20.0, -60.0, -100.0 });
+		AssertFilterResponseValuesEqual(minicv::CreateLaplacianResponse(image, replicateBorderParameters), std::array<double, 4>{ 30.0, 10.0, -10.0, -30.0 });
 	}
 
 	void TestFiltersHandleKernelsLargerThanSinglePixelImage()
@@ -525,22 +535,14 @@ namespace
 		const minicv::ImageBorderParameters constantBorderParameters{ minicv::EBorderType::CONSTANT, 15 };
 		const minicv::ImageBorderParameters replicateBorderParameters{ minicv::EBorderType::REPLICATE, 15 };
 
-		AssertGrayscalePixelsEqual(minicv::CreateBoxBlurredImage(image, kernelSize, constantBorderParameters),
-			std::array<std::uint8_t, 1>{ 18 });
-		AssertGrayscalePixelsEqual(minicv::CreateMedianFilteredImage(image, kernelSize, constantBorderParameters),
-			std::array<std::uint8_t, 1>{ 15 });
-		AssertGrayscalePixelsEqual(minicv::CreateBoxBlurredImage(image, kernelSize, replicateBorderParameters),
-			std::array<std::uint8_t, 1>{ 90 });
-		AssertGrayscalePixelsEqual(minicv::CreateGaussianBlurredImage(image, kernelSize, 1.0, replicateBorderParameters),
-			std::array<std::uint8_t, 1>{ 90 });
-		AssertGrayscalePixelsEqual(minicv::CreateMedianFilteredImage(image, kernelSize, replicateBorderParameters),
-			std::array<std::uint8_t, 1>{ 90 });
-		AssertGrayscalePixelsEqual(minicv::CreateSharpenedImage(image, replicateBorderParameters),
-			std::array<std::uint8_t, 1>{ 90 });
-		AssertFilterResponseValuesEqual(minicv::CreateSobelXResponse(image, replicateBorderParameters),
-			std::array<double, 1>{ 0.0 });
-		AssertFilterResponseValuesEqual(minicv::CreateSobelYResponse(image, replicateBorderParameters),
-			std::array<double, 1>{ 0.0 });
+		AssertGrayscalePixelsEqual(minicv::CreateBoxBlurredImage(image, kernelSize, constantBorderParameters), std::array<std::uint8_t, 1>{ 18 });
+		AssertGrayscalePixelsEqual(minicv::CreateMedianFilteredImage(image, kernelSize, constantBorderParameters), std::array<std::uint8_t, 1>{ 15 });
+		AssertGrayscalePixelsEqual(minicv::CreateBoxBlurredImage(image, kernelSize, replicateBorderParameters), std::array<std::uint8_t, 1>{ 90 });
+		AssertGrayscalePixelsEqual(minicv::CreateGaussianBlurredImage(image, kernelSize, 1.0, replicateBorderParameters), std::array<std::uint8_t, 1>{ 90 });
+		AssertGrayscalePixelsEqual(minicv::CreateMedianFilteredImage(image, kernelSize, replicateBorderParameters), std::array<std::uint8_t, 1>{ 90 });
+		AssertGrayscalePixelsEqual(minicv::CreateSharpenedImage(image, replicateBorderParameters), std::array<std::uint8_t, 1>{ 90 });
+		AssertFilterResponseValuesEqual(minicv::CreateSobelXResponse(image, replicateBorderParameters), std::array<double, 1>{ 0.0 });
+		AssertFilterResponseValuesEqual(minicv::CreateSobelYResponse(image, replicateBorderParameters), std::array<double, 1>{ 0.0 });
 	}
 
 	void TestGaussianAndSharpeningConstantBordersProduceExpectedPixels()
@@ -550,10 +552,8 @@ namespace
 		const minicv::ImageBorderParameters borderParameters{ minicv::EBorderType::CONSTANT, 15 };
 
 		// The center weight of the normalized 3x3 Gaussian at sigma=1 is approximately 0.20418.
-		AssertGrayscalePixelsEqual(minicv::CreateGaussianBlurredImage(image, minicv::Size{ 3, 3 }, 1.0, borderParameters),
-			std::array<std::uint8_t, 1>{ 30 });
-		AssertGrayscalePixelsEqual(minicv::CreateSharpenedImage(image, borderParameters),
-			std::array<std::uint8_t, 1>{ 255 });
+		AssertGrayscalePixelsEqual(minicv::CreateGaussianBlurredImage(image, minicv::Size{ 3, 3 }, 1.0, borderParameters), std::array<std::uint8_t, 1>{ 30 });
+		AssertGrayscalePixelsEqual(minicv::CreateSharpenedImage(image, borderParameters), std::array<std::uint8_t, 1>{ 255 });
 	}
 
 	void TestSignedResponseImageUsesMaximumAbsoluteValue()
@@ -573,16 +573,20 @@ namespace
 		SetFilterResponseValues(sobelXResponse, std::array<double, 4>{ -3.0, 3.0, -5.0, 5.0 });
 		SetFilterResponseValues(sobelYResponse, std::array<double, 4>{ -4.0, -4.0, 0.0, 0.0 });
 
-		AssertFilterResponseValuesEqual(minicv::CreateGradientDirectionResponse(sobelXResponse, sobelYResponse),
-			std::array<double, 4>{ -SECOND_QUADRANT_DIRECTION_RADIANS, -FIRST_QUADRANT_DIRECTION_RADIANS, std::numbers::pi_v<double>, 0.0 });
+		AssertFilterResponseValuesEqual(minicv::CreateGradientDirectionResponse(sobelXResponse, sobelYResponse), std::array<double, 4>
+		{
+			-SECOND_QUADRANT_DIRECTION_RADIANS,
+			-FIRST_QUADRANT_DIRECTION_RADIANS,
+			std::numbers::pi_v<double>,
+			0.0
+		});
 	}
 
 	void TestGradientNormalizationPreservesZeroOrigin()
 	{
 		minicv::GrayscaleFilterResponse response(minicv::Size{ 3, 1 });
 		SetFilterResponseValues(response, std::array<double, 3>{ 5.0, 10.0, 20.0 });
-		AssertGrayscalePixelsEqual(minicv::CreateNormalizedGradientMagnitudeImage(response),
-			std::array<std::uint8_t, 3>{ 64, 128, 255 });
+		AssertGrayscalePixelsEqual(minicv::CreateNormalizedGradientMagnitudeImage(response), std::array<std::uint8_t, 3>{ 64, 128, 255 });
 		AssertFilterResponseValuesEqual(response, std::array<double, 3>{ 5.0, 10.0, 20.0 });
 	}
 

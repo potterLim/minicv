@@ -48,32 +48,44 @@ namespace minicv
 
 		ConvolutionKernel CreateSharpeningKernel()
 		{
-			return ConvolutionKernel(
-				Size{ 3, 3 },
-				std::vector<double>{ 0.0, -1.0, 0.0, -1.0, 5.0, -1.0, 0.0, -1.0, 0.0 });
+			return ConvolutionKernel(Size{ 3, 3 }, std::vector<double>
+			{
+				0.0, -1.0, 0.0,
+				-1.0, 5.0, -1.0,
+				0.0, -1.0, 0.0
+			});
 		}
 
 		ConvolutionKernel CreateLaplacianKernel()
 		{
-			return ConvolutionKernel(
-				Size{ 3, 3 },
-				std::vector<double>{ 0.0, 1.0, 0.0, 1.0, -4.0, 1.0, 0.0, 1.0, 0.0 });
+			return ConvolutionKernel(Size{ 3, 3 }, std::vector<double>
+			{
+				0.0, 1.0, 0.0,
+				1.0, -4.0, 1.0,
+				0.0, 1.0, 0.0
+			});
 		}
 
 		// These Sobel signs account for convolution's reversed kernel offsets.
 		// Intensity increases to the right or downward produce positive responses.
 		ConvolutionKernel CreateSobelXKernel()
 		{
-			return ConvolutionKernel(
-				Size{ 3, 3 },
-				std::vector<double>{ 1.0, 0.0, -1.0, 2.0, 0.0, -2.0, 1.0, 0.0, -1.0 });
+			return ConvolutionKernel(Size{ 3, 3 }, std::vector<double>
+			{
+				1.0, 0.0, -1.0,
+				2.0, 0.0, -2.0,
+				1.0, 0.0, -1.0
+			});
 		}
 
 		ConvolutionKernel CreateSobelYKernel()
 		{
-			return ConvolutionKernel(
-				Size{ 3, 3 },
-				std::vector<double>{ 1.0, 2.0, 1.0, 0.0, 0.0, 0.0, -1.0, -2.0, -1.0 });
+			return ConvolutionKernel(Size{ 3, 3 }, std::vector<double>
+			{
+				1.0, 2.0, 1.0,
+				0.0, 0.0, 0.0,
+				-1.0, -2.0, -1.0
+			});
 		}
 
 		std::uint8_t ClampAndRoundToByte(const double pixelValue)
@@ -187,10 +199,7 @@ namespace minicv
 			return convolvedPixelValue;
 		}
 
-		GrayscaleFilterResponse CreateGrayscaleConvolutionResponse(
-			const Image& grayscaleImage,
-			const ConvolutionKernel& kernel,
-			const ImageBorderParameters borderParameters)
+		GrayscaleFilterResponse CreateGrayscaleConvolutionResponse(const Image& grayscaleImage, const ConvolutionKernel& kernel, const ImageBorderParameters borderParameters)
 		{
 			const bool isImageGrayscale = grayscaleImage.GetImageType() == EImageType::UINT8_GRAYSCALE;
 			assert(isImageGrayscale && "image type must be UINT8_GRAYSCALE.");
@@ -211,13 +220,7 @@ namespace minicv
 			{
 				for (int x = 0; x < grayscaleImage.GetWidth(); ++x)
 				{
-					response.GetResponseValue(x, y) = ConvolvePixelChannel(
-						grayscaleImage,
-						kernel,
-						x,
-						y,
-						GRAYSCALE_CHANNEL_INDEX,
-						borderParameters);
+					response.GetResponseValue(x, y) = ConvolvePixelChannel(grayscaleImage, kernel, x, y, GRAYSCALE_CHANNEL_INDEX, borderParameters);
 				}
 			}
 
@@ -316,11 +319,7 @@ namespace minicv
 		return ConvolutionKernel(kernelSize, std::move(coefficients));
 	}
 
-	Image CreateGaussianBlurredImage(
-		const Image& image,
-		const Size kernelSize,
-		const double standardDeviation,
-		const ImageBorderParameters borderParameters)
+	Image CreateGaussianBlurredImage(const Image& image, const Size kernelSize, const double standardDeviation, const ImageBorderParameters borderParameters)
 	{
 		const ConvolutionKernel gaussianKernel = CreateGaussianKernel(kernelSize, standardDeviation);
 		return CreateConvolvedImage(image, gaussianKernel, borderParameters);
@@ -435,9 +434,7 @@ namespace minicv
 		return CreateGrayscaleConvolutionResponse(grayscaleImage, sobelYKernel, borderParameters);
 	}
 
-	GrayscaleFilterResponse CreateGradientMagnitudeResponse(
-		const GrayscaleFilterResponse& sobelXResponse,
-		const GrayscaleFilterResponse& sobelYResponse)
+	GrayscaleFilterResponse CreateGradientMagnitudeResponse(const GrayscaleFilterResponse& sobelXResponse, const GrayscaleFilterResponse& sobelYResponse)
 	{
 		const bool isResponseSizeEqual = sobelXResponse.GetWidth() == sobelYResponse.GetWidth() && sobelXResponse.GetHeight() == sobelYResponse.GetHeight();
 		assert(isResponseSizeEqual && "Sobel response sizes must match.");
@@ -470,9 +467,7 @@ namespace minicv
 		return gradientMagnitudeResponse;
 	}
 
-	GrayscaleFilterResponse CreateGradientDirectionResponse(
-		const GrayscaleFilterResponse& sobelXResponse,
-		const GrayscaleFilterResponse& sobelYResponse)
+	GrayscaleFilterResponse CreateGradientDirectionResponse(const GrayscaleFilterResponse& sobelXResponse, const GrayscaleFilterResponse& sobelYResponse)
 	{
 		const bool isResponseSizeEqual = sobelXResponse.GetWidth() == sobelYResponse.GetWidth() && sobelXResponse.GetHeight() == sobelYResponse.GetHeight();
 		assert(isResponseSizeEqual && "Sobel response sizes must match.");

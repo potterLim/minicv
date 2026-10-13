@@ -89,7 +89,9 @@ int main()
 	const minicv::Image otsuThresholdedImage = minicv::CreateThresholdedGrayscaleImage(convolvedImage, otsuParameters);
 	const minicv::Image adaptiveThresholdedImage = minicv::CreateAdaptiveMeanThresholdedGrayscaleImage(convolvedImage, adaptiveParameters);
 
-	if (convolvedImage.HasSameContent(sourceImage) || !HasMixedBinaryPixels(otsuThresholdedImage) || !HasMixedBinaryPixels(adaptiveThresholdedImage))
+	if (convolvedImage.HasSameContent(sourceImage) ||
+		!HasMixedBinaryPixels(otsuThresholdedImage) ||
+		!HasMixedBinaryPixels(adaptiveThresholdedImage))
 	{
 		std::cerr << "Unexpected threshold or convolution result.\n";
 		return 1;

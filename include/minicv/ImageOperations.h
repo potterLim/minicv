@@ -23,15 +23,8 @@ namespace minicv
 	[[nodiscard]] Image CreateRedBlueChannelSwappedImage(const Image& rgbImage);
 
 	[[nodiscard]] Image ExtractRgbChannel(const Image& rgbImage, const ERgbChannel rgbChannel);
-	void SplitRgbChannels(
-		const Image& rgbImage,
-		Image* outRedChannelImage,
-		Image* outGreenChannelImage,
-		Image* outBlueChannelImage);
-	[[nodiscard]] Image MergeRgbChannels(
-		const Image& redChannelImage,
-		const Image& greenChannelImage,
-		const Image& blueChannelImage);
+	void SplitRgbChannels(const Image& rgbImage, Image* outRedChannelImage, Image* outGreenChannelImage, Image* outBlueChannelImage);
+	[[nodiscard]] Image MergeRgbChannels(const Image& redChannelImage, const Image& greenChannelImage, const Image& blueChannelImage);
 
 	[[nodiscard]] Image CreateInvertedImage(const Image& image);
 	[[nodiscard]] Image AdjustImageBrightness(const Image& image, const int brightnessOffset);

@@ -65,7 +65,9 @@ int main()
 	const std::uint8_t maximumPixelDifference = minicv::GetMaximumPixelDifference(previousFrame, currentFrame);
 	const minicv::Image changedRegionImage = differenceImage.ExtractRegion(changedRegion);
 
-	if (!hasChanged || changedPixelCount != EXPECTED_CHANGED_PIXEL_COUNT || maximumPixelDifference != OBJECT_VALUE)
+	if (!hasChanged ||
+		changedPixelCount != EXPECTED_CHANGED_PIXEL_COUNT ||
+		maximumPixelDifference != OBJECT_VALUE)
 	{
 		std::cerr << "Unexpected image difference result.\n";
 		return 1;

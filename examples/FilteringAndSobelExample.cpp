@@ -64,10 +64,7 @@ namespace
 		return true;
 	}
 
-	[[nodiscard]] bool TrySaveFilteringComparison(
-		const minicv::Image& sourceImage,
-		const minicv::ImageBorderParameters borderParameters,
-		const std::filesystem::path& outputDirectory)
+	[[nodiscard]] bool TrySaveFilteringComparison(const minicv::Image& sourceImage, const minicv::ImageBorderParameters borderParameters, const std::filesystem::path& outputDirectory)
 	{
 		std::error_code errorCode;
 		std::filesystem::create_directories(outputDirectory, errorCode);
@@ -78,8 +75,7 @@ namespace
 		}
 
 		const minicv::Image boxBlurredImage = minicv::CreateBoxBlurredImage(sourceImage, KERNEL_SIZE, borderParameters);
-		const minicv::Image gaussianBlurredImage = minicv::CreateGaussianBlurredImage(
-			sourceImage, KERNEL_SIZE, GAUSSIAN_STANDARD_DEVIATION, borderParameters);
+		const minicv::Image gaussianBlurredImage = minicv::CreateGaussianBlurredImage(sourceImage, KERNEL_SIZE, GAUSSIAN_STANDARD_DEVIATION, borderParameters);
 		const minicv::Image medianFilteredImage = minicv::CreateMedianFilteredImage(sourceImage, KERNEL_SIZE, borderParameters);
 		const minicv::Image sharpenedImage = minicv::CreateSharpenedImage(sourceImage, borderParameters);
 		const minicv::GrayscaleFilterResponse laplacianResponse = minicv::CreateLaplacianResponse(sourceImage, borderParameters);
@@ -94,14 +90,15 @@ namespace
 
 		const minicv::GrayscaleFilterResponse blurredSobelXResponse = minicv::CreateSobelXResponse(gaussianBlurredImage, borderParameters);
 		const minicv::GrayscaleFilterResponse blurredSobelYResponse = minicv::CreateSobelYResponse(gaussianBlurredImage, borderParameters);
-		const minicv::GrayscaleFilterResponse blurredMagnitudeResponse = minicv::CreateGradientMagnitudeResponse(
-			blurredSobelXResponse, blurredSobelYResponse);
+		const minicv::GrayscaleFilterResponse blurredMagnitudeResponse = minicv::CreateGradientMagnitudeResponse(blurredSobelXResponse, blurredSobelYResponse);
 		const minicv::Image blurredEdgeImage = minicv::CreateNormalizedGradientMagnitudeImage(blurredMagnitudeResponse);
 
-		if (boxBlurredImage.HasSameContent(sourceImage) || gaussianBlurredImage.HasSameContent(sourceImage) ||
+		if (boxBlurredImage.HasSameContent(sourceImage) ||
+			gaussianBlurredImage.HasSameContent(sourceImage) ||
 			medianFilteredImage.GetGrayscalePixel(BRIGHT_NOISE_POSITION.X, BRIGHT_NOISE_POSITION.Y) != BACKGROUND_VALUE ||
 			medianFilteredImage.GetGrayscalePixel(DARK_NOISE_POSITION.X, DARK_NOISE_POSITION.Y) != OBJECT_VALUE ||
-			minicv::CountNonZeroPixels(edgeImage) == 0 || edgeImage.HasSameContent(blurredEdgeImage))
+			minicv::CountNonZeroPixels(edgeImage) == 0 ||
+			edgeImage.HasSameContent(blurredEdgeImage))
 		{
 			std::cerr << "Unexpected filtering or Sobel result.\n";
 			return false;

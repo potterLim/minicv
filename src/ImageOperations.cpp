@@ -47,10 +47,7 @@ namespace minicv
 			return false;
 		}
 
-		std::uint8_t ConvertRgbPixelToGrayscale(
-			const std::uint8_t red,
-			const std::uint8_t green,
-			const std::uint8_t blue)
+		std::uint8_t ConvertRgbPixelToGrayscale(const std::uint8_t red, const std::uint8_t green, const std::uint8_t blue)
 		{
 			const int weightedSum =
 				red * GRAYSCALE_RED_WEIGHT +
@@ -95,10 +92,7 @@ namespace minicv
 			return transformedImage;
 		}
 
-		std::uint8_t NormalizeGrayscalePixel(
-			const std::uint8_t pixelValue,
-			const std::uint8_t minimumValue,
-			const std::uint8_t maximumValue)
+		std::uint8_t NormalizeGrayscalePixel(const std::uint8_t pixelValue, const std::uint8_t minimumValue, const std::uint8_t maximumValue)
 		{
 			const int valueRange = static_cast<int>(maximumValue) - static_cast<int>(minimumValue);
 			assert(valueRange > 0 && "grayscale value range must be positive.");
@@ -135,9 +129,7 @@ namespace minicv
 			return 0;
 		}
 
-		std::array<std::uint8_t, GRAYSCALE_HISTOGRAM_BIN_COUNT> CreateHistogramEqualizationLookupTable(
-			const GrayscaleHistogram& histogram,
-			const std::size_t pixelCount)
+		std::array<std::uint8_t, GRAYSCALE_HISTOGRAM_BIN_COUNT> CreateHistogramEqualizationLookupTable(const GrayscaleHistogram& histogram, const std::size_t pixelCount)
 		{
 			std::array<std::uint8_t, GRAYSCALE_HISTOGRAM_BIN_COUNT> lookupTable{};
 			const std::size_t firstPopulatedBinIndex = GetFirstPopulatedHistogramBinIndex(histogram);
@@ -352,11 +344,7 @@ namespace minicv
 		return channelImage;
 	}
 
-	void SplitRgbChannels(
-		const Image& rgbImage,
-		Image* outRedChannelImage,
-		Image* outGreenChannelImage,
-		Image* outBlueChannelImage)
+	void SplitRgbChannels(const Image& rgbImage, Image* outRedChannelImage, Image* outGreenChannelImage, Image* outBlueChannelImage)
 	{
 		assert(outRedChannelImage != nullptr && "outRedChannelImage must not be null.");
 		assert(outGreenChannelImage != nullptr && "outGreenChannelImage must not be null.");
@@ -375,10 +363,7 @@ namespace minicv
 		*outBlueChannelImage = std::move(blueChannelImage);
 	}
 
-	Image MergeRgbChannels(
-		const Image& redChannelImage,
-		const Image& greenChannelImage,
-		const Image& blueChannelImage)
+	Image MergeRgbChannels(const Image& redChannelImage, const Image& greenChannelImage, const Image& blueChannelImage)
 	{
 		assert(redChannelImage.GetImageType() == EImageType::UINT8_GRAYSCALE && "red channel must be UINT8_GRAYSCALE.");
 		assert(greenChannelImage.GetImageType() == EImageType::UINT8_GRAYSCALE && "green channel must be UINT8_GRAYSCALE.");

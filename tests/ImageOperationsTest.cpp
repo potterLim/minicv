@@ -45,10 +45,7 @@ namespace
 		static_cast<void>(isBlueEqual);
 	}
 
-	void AssertHistogramBinCount(
-		const minicv::GrayscaleHistogram& histogram,
-		const std::uint8_t pixelValue,
-		const std::size_t expectedBinCount)
+	void AssertHistogramBinCount(const minicv::GrayscaleHistogram& histogram, const std::uint8_t pixelValue, const std::size_t expectedBinCount)
 	{
 		const std::size_t binIndex = static_cast<std::size_t>(pixelValue);
 		const bool isBinCountEqual = histogram.BinCounts[binIndex] == expectedBinCount;
@@ -58,10 +55,7 @@ namespace
 		static_cast<void>(isBinCountEqual);
 	}
 
-	void AssertCumulativeDistributionValue(
-		const minicv::GrayscaleCumulativeDistribution& cumulativeDistribution,
-		const std::uint8_t pixelValue,
-		const double expectedValue)
+	void AssertCumulativeDistributionValue(const minicv::GrayscaleCumulativeDistribution& cumulativeDistribution, const std::uint8_t pixelValue, const double expectedValue)
 	{
 		const std::size_t binIndex = static_cast<std::size_t>(pixelValue);
 		const bool isValueEqual = cumulativeDistribution.Values[binIndex] == expectedValue;
@@ -91,9 +85,7 @@ namespace
 	}
 
 	template <std::size_t PIXEL_COUNT>
-	void AssertGrayscaleRowEquals(
-		const minicv::Image& image,
-		const std::array<std::uint8_t, PIXEL_COUNT>& expectedPixelValues)
+	void AssertGrayscaleRowEquals(const minicv::Image& image, const std::array<std::uint8_t, PIXEL_COUNT>& expectedPixelValues)
 	{
 		const bool isWidthEqual = image.GetWidth() == static_cast<int>(PIXEL_COUNT);
 		const bool isHeightEqual = image.GetHeight() == 1;
@@ -778,17 +770,38 @@ namespace
 			{
 				for (int lastCount = 1; lastCount <= 10; ++lastCount)
 				{
-					minicv::Image image(firstCount + middleCount + lastCount, 1);
+					const int middleRegionEnd = firstCount + middleCount;
+					minicv::Image image(middleRegionEnd + lastCount, 1);
 					for (int x = 0; x < image.GetWidth(); ++x)
 					{
-						image.GetGrayscalePixel(x, 0) = x < firstCount ? 0 : x < firstCount + middleCount ? 1 : 2;
+						std::uint8_t pixelValue = 0;
+						if (x >= middleRegionEnd)
+						{
+							pixelValue = 2;
+						}
+						else if (x >= firstCount)
+						{
+							pixelValue = 1;
+						}
+
+						image.GetGrayscalePixel(x, 0) = pixelValue;
 					}
+
 					const minicv::Image equalizedImage = minicv::CreateHistogramEqualizedGrayscaleImage(image);
 					const int remainingCount = middleCount + lastCount;
 					const int expectedMiddleValue = (255 * middleCount + remainingCount / 2) / remainingCount;
 					for (int x = 0; x < image.GetWidth(); ++x)
 					{
-						const int expectedValue = x < firstCount ? 0 : x < firstCount + middleCount ? expectedMiddleValue : 255;
+						int expectedValue = 0;
+						if (x >= middleRegionEnd)
+						{
+							expectedValue = 255;
+						}
+						else if (x >= firstCount)
+						{
+							expectedValue = expectedMiddleValue;
+						}
+
 						const bool isPixelEqual = equalizedImage.GetGrayscalePixel(x, 0) == expectedValue;
 						assert(isPixelEqual);
 						static_cast<void>(isPixelEqual);

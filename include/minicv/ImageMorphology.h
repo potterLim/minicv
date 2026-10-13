@@ -19,24 +19,12 @@ namespace minicv
 	// Offsets are relative to the structuring element's center.
 
 	// Takes the minimum over active offsets: source(x + dx, y + dy).
-	[[nodiscard]] Image CreateErodedImage(
-		const Image& image,
-		const StructuringElement& structuringElement,
-		const ImageBorderParameters borderParameters);
+	[[nodiscard]] Image CreateErodedImage(const Image& image, const StructuringElement& structuringElement, const ImageBorderParameters borderParameters);
 
 	// Takes the maximum over reflected active offsets: source(x - dx, y - dy).
-	[[nodiscard]] Image CreateDilatedImage(
-		const Image& image,
-		const StructuringElement& structuringElement,
-		const ImageBorderParameters borderParameters);
+	[[nodiscard]] Image CreateDilatedImage(const Image& image, const StructuringElement& structuringElement, const ImageBorderParameters borderParameters);
 
-	[[nodiscard]] Image CreateOpenedImage(
-		const Image& image,
-		const StructuringElement& structuringElement,
-		const ImageBorderParameters borderParameters);
+	[[nodiscard]] Image CreateOpenedImage(const Image& image, const StructuringElement& structuringElement, const ImageBorderParameters borderParameters);
 
-	[[nodiscard]] Image CreateClosedImage(
-		const Image& image,
-		const StructuringElement& structuringElement,
-		const ImageBorderParameters borderParameters);
+	[[nodiscard]] Image CreateClosedImage(const Image& image, const StructuringElement& structuringElement, const ImageBorderParameters borderParameters);
 }

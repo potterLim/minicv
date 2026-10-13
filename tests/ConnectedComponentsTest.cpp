@@ -64,9 +64,12 @@ namespace
 
 	void AssertComponentEqual(const minicv::ConnectedComponent& actual, const minicv::ConnectedComponent& expected)
 	{
-		const bool isEqual = actual.Label == expected.Label && actual.Area == expected.Area &&
-			actual.BoundingBox.X == expected.BoundingBox.X && actual.BoundingBox.Y == expected.BoundingBox.Y &&
-			actual.BoundingBox.Width == expected.BoundingBox.Width && actual.BoundingBox.Height == expected.BoundingBox.Height &&
+		const bool isEqual = actual.Label == expected.Label &&
+			actual.Area == expected.Area &&
+			actual.BoundingBox.X == expected.BoundingBox.X &&
+			actual.BoundingBox.Y == expected.BoundingBox.Y &&
+			actual.BoundingBox.Width == expected.BoundingBox.Width &&
+			actual.BoundingBox.Height == expected.BoundingBox.Height &&
 			std::abs(actual.CentroidX - expected.CentroidX) <= COMPARISON_TOLERANCE &&
 			std::abs(actual.CentroidY - expected.CentroidY) <= COMPARISON_TOLERANCE;
 		assert(isEqual);
@@ -144,8 +147,7 @@ namespace
 
 	void TestScanOrderAndPixelCentroidForIrregularRegion()
 	{
-		const minicv::Image image = CreateImage(minicv::Size{ 5, 3 },
-			std::array<std::uint8_t, 15>{ 0, 0, 0, 0, 255, 1, 2, 0, 0, 0, 3, 0, 0, 0, 0 });
+		const minicv::Image image = CreateImage(minicv::Size{ 5, 3 }, std::array<std::uint8_t, 15>{ 0, 0, 0, 0, 255, 1, 2, 0, 0, 0, 3, 0, 0, 0, 0 });
 		const minicv::ConnectedComponents components(image, minicv::EConnectivity::EIGHT);
 		assert(components.GetComponentCount() == 2);
 		AssertLabelsEqual(components, std::array<std::size_t, 15>{ 0, 0, 0, 0, 1, 2, 2, 0, 0, 0, 2, 0, 0, 0, 0 });
@@ -193,8 +195,7 @@ namespace
 				{
 					++expectedLabel;
 					assert(components.GetLabel(x, y) == expectedLabel);
-					AssertComponentEqual(components.GetComponents()[expectedLabel - 1],
-						minicv::ConnectedComponent{ expectedLabel, 1, { x, y, 1, 1 }, static_cast<double>(x), static_cast<double>(y) });
+					AssertComponentEqual(components.GetComponents()[expectedLabel - 1], minicv::ConnectedComponent{ expectedLabel, 1, { x, y, 1, 1 }, static_cast<double>(x), static_cast<double>(y) });
 				}
 				else
 				{
@@ -214,8 +215,7 @@ namespace
 		image.Fill(0);
 		assert(components.GetComponentCount() == 1);
 		assert(components.GetLabel(0, HEIGHT - 1) == 1);
-		AssertComponentEqual(components.GetComponents()[0],
-			minicv::ConnectedComponent{ 1, HEIGHT, { 0, 0, 1, HEIGHT }, 0.0, (HEIGHT - 1) / 2.0 });
+		AssertComponentEqual(components.GetComponents()[0], minicv::ConnectedComponent{ 1, HEIGHT, { 0, 0, 1, HEIGHT }, 0.0, (HEIGHT - 1) / 2.0 });
 	}
 
 	void TestOppositeRowEdgesRemainSeparate()

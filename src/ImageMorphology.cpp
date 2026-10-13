@@ -17,11 +17,7 @@ namespace minicv
 			DILATION
 		};
 
-		Image CreateMorphologicalImage(
-			const Image& image,
-			const StructuringElement& structuringElement,
-			const ImageBorderParameters borderParameters,
-			const EMorphologyOperation operation)
+		Image CreateMorphologicalImage(const Image& image, const StructuringElement& structuringElement, const ImageBorderParameters borderParameters, const EMorphologyOperation operation)
 		{
 			const bool isBorderTypeSupported = borderParameters.BorderType == EBorderType::CONSTANT || borderParameters.BorderType == EBorderType::REPLICATE;
 			assert(isBorderTypeSupported && "border type must be CONSTANT or REPLICATE.");
@@ -64,8 +60,8 @@ namespace minicv
 							}
 						}
 
-						const std::size_t pixelIndex = detail::CalculatePixelByteIndex(processedImage, x, y, channelIndex);
-						processedPixels[pixelIndex] = selectedValue;
+						const std::size_t pixelByteIndex = detail::CalculatePixelByteIndex(processedImage, x, y, channelIndex);
+						processedPixels[pixelByteIndex] = selectedValue;
 					}
 				}
 			}

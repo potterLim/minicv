@@ -195,8 +195,6 @@ int main()
 	TestCopyAssignment(minicv::StructuringElement({ 3, 1 }, { 0, 1, 0 }), minicv::StructuringElement({ 1, 1 }, { 1 }), 1);
 
 	// Fail both the label allocation and the subsequent component-statistics allocation.
-	TestCopyAssignment(
-		minicv::ConnectedComponents(source, minicv::EConnectivity::FOUR),
-		minicv::ConnectedComponents(minicv::Image(1, 1), minicv::EConnectivity::FOUR), 2);
+	TestCopyAssignment(minicv::ConnectedComponents(source, minicv::EConnectivity::FOUR), minicv::ConnectedComponents(minicv::Image(1, 1), minicv::EConnectivity::FOUR), 2);
 	return 0;
 }

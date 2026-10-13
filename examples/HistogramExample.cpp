@@ -75,14 +75,17 @@ int main()
 	const minicv::GrayscaleHistogram normalizedHistogram = minicv::CalculateGrayscaleHistogram(normalizedImage);
 	const std::optional<minicv::GrayscaleValueRange> normalizedValueRange = minicv::TryGetGrayscaleValueRange(normalizedImage);
 
-	if (!sourceValueRange.has_value() || sourceValueRange->Minimum != EXPECTED_MINIMUM_PIXEL_VALUE ||
+	if (!sourceValueRange.has_value() ||
+		sourceValueRange->Minimum != EXPECTED_MINIMUM_PIXEL_VALUE ||
 		sourceValueRange->Maximum != EXPECTED_MAXIMUM_PIXEL_VALUE)
 	{
 		std::cerr << "Unexpected source image value range.\n";
 		return 1;
 	}
 
-	if (!normalizedValueRange.has_value() || normalizedValueRange->Minimum != 0 || normalizedValueRange->Maximum != 255)
+	if (!normalizedValueRange.has_value() ||
+		normalizedValueRange->Minimum != 0 ||
+		normalizedValueRange->Maximum != 255)
 	{
 		std::cerr << "Unexpected normalized image value range.\n";
 		return 1;

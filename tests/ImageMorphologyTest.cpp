@@ -22,10 +22,7 @@ namespace
 	}
 
 	template <std::size_t BYTE_COUNT>
-	minicv::Image CreateImage(
-		const minicv::Size size,
-		const minicv::EImageType imageType,
-		const std::array<std::uint8_t, BYTE_COUNT>& pixels)
+	minicv::Image CreateImage(const minicv::Size size, const minicv::EImageType imageType, const std::array<std::uint8_t, BYTE_COUNT>& pixels)
 	{
 		minicv::Image image(size, imageType);
 		assert(image.GetByteCount() == BYTE_COUNT);
@@ -38,48 +35,38 @@ namespace
 
 	void TestErosionAndDilationUseGrayscaleExtrema()
 	{
-		const minicv::Image image = CreateImage(minicv::Size{ 5, 1 }, minicv::EImageType::UINT8_GRAYSCALE,
-			std::array<std::uint8_t, 5>{ 10, 80, 30, 200, 50 });
+		const minicv::Image image = CreateImage(minicv::Size{ 5, 1 }, minicv::EImageType::UINT8_GRAYSCALE, std::array<std::uint8_t, 5>{ 10, 80, 30, 200, 50 });
 		const minicv::StructuringElement element = minicv::CreateRectangularStructuringElement(minicv::Size{ 3, 1 });
 		const minicv::ImageBorderParameters borderParameters{ minicv::EBorderType::REPLICATE, 255 };
 
-		AssertPixelsEqual(minicv::CreateErodedImage(image, element, borderParameters),
-			std::array<std::uint8_t, 5>{ 10, 10, 30, 30, 50 });
-		AssertPixelsEqual(minicv::CreateDilatedImage(image, element, borderParameters),
-			std::array<std::uint8_t, 5>{ 80, 80, 200, 200, 200 });
+		AssertPixelsEqual(minicv::CreateErodedImage(image, element, borderParameters), std::array<std::uint8_t, 5>{ 10, 10, 30, 30, 50 });
+		AssertPixelsEqual(minicv::CreateDilatedImage(image, element, borderParameters), std::array<std::uint8_t, 5>{ 80, 80, 200, 200, 200 });
 		AssertPixelsEqual(image, std::array<std::uint8_t, 5>{ 10, 80, 30, 200, 50 });
 	}
 
 	void TestCrossMaskExcludesDiagonalNeighbors()
 	{
-		const minicv::Image image = CreateImage(minicv::Size{ 3, 3 }, minicv::EImageType::UINT8_GRAYSCALE,
-			std::array<std::uint8_t, 9>{ 10, 20, 30, 40, 50, 60, 70, 80, 90 });
+		const minicv::Image image = CreateImage(minicv::Size{ 3, 3 }, minicv::EImageType::UINT8_GRAYSCALE, std::array<std::uint8_t, 9>{ 10, 20, 30, 40, 50, 60, 70, 80, 90 });
 		const minicv::StructuringElement cross = minicv::CreateCrossStructuringElement(minicv::Size{ 3, 3 });
 		const minicv::ImageBorderParameters borderParameters{ minicv::EBorderType::REPLICATE, 0 };
 
-		AssertPixelsEqual(minicv::CreateErodedImage(image, cross, borderParameters),
-			std::array<std::uint8_t, 9>{ 10, 10, 20, 10, 20, 30, 40, 50, 60 });
-		AssertPixelsEqual(minicv::CreateDilatedImage(image, cross, borderParameters),
-			std::array<std::uint8_t, 9>{ 40, 50, 60, 70, 80, 90, 80, 90, 90 });
+		AssertPixelsEqual(minicv::CreateErodedImage(image, cross, borderParameters), std::array<std::uint8_t, 9>{ 10, 10, 20, 10, 20, 30, 40, 50, 60 });
+		AssertPixelsEqual(minicv::CreateDilatedImage(image, cross, borderParameters), std::array<std::uint8_t, 9>{ 40, 50, 60, 70, 80, 90, 80, 90, 90 });
 	}
 
 	void TestAsymmetricMaskReflectsOnlyForDilation()
 	{
-		const minicv::Image image = CreateImage(minicv::Size{ 3, 2 }, minicv::EImageType::UINT8_GRAYSCALE,
-			std::array<std::uint8_t, 6>{ 10, 20, 30, 40, 50, 60 });
+		const minicv::Image image = CreateImage(minicv::Size{ 3, 2 }, minicv::EImageType::UINT8_GRAYSCALE, std::array<std::uint8_t, 6>{ 10, 20, 30, 40, 50, 60 });
 		const minicv::StructuringElement element(minicv::Size{ 3, 3 }, std::vector<std::uint8_t>{ 7, 0, 0, 0, 0, 0, 0, 0, 0 });
 		const minicv::ImageBorderParameters borderParameters{ minicv::EBorderType::CONSTANT, 99 };
 
-		AssertPixelsEqual(minicv::CreateErodedImage(image, element, borderParameters),
-			std::array<std::uint8_t, 6>{ 99, 99, 99, 99, 10, 20 });
-		AssertPixelsEqual(minicv::CreateDilatedImage(image, element, borderParameters),
-			std::array<std::uint8_t, 6>{ 50, 60, 99, 99, 99, 99 });
+		AssertPixelsEqual(minicv::CreateErodedImage(image, element, borderParameters), std::array<std::uint8_t, 6>{ 99, 99, 99, 99, 10, 20 });
+		AssertPixelsEqual(minicv::CreateDilatedImage(image, element, borderParameters), std::array<std::uint8_t, 6>{ 50, 60, 99, 99, 99, 99 });
 	}
 
 	void TestLargeMaskAndConstantBordersHandleSinglePixel()
 	{
-		const minicv::Image image = CreateImage(minicv::Size{ 1, 1 }, minicv::EImageType::UINT8_GRAYSCALE,
-			std::array<std::uint8_t, 1>{ 90 });
+		const minicv::Image image = CreateImage(minicv::Size{ 1, 1 }, minicv::EImageType::UINT8_GRAYSCALE, std::array<std::uint8_t, 1>{ 90 });
 		const minicv::StructuringElement element = minicv::CreateRectangularStructuringElement(minicv::Size{ 5, 3 });
 		const minicv::ImageBorderParameters lowBorder{ minicv::EBorderType::CONSTANT, 15 };
 		const minicv::ImageBorderParameters highBorder{ minicv::EBorderType::CONSTANT, 200 };
@@ -95,8 +82,7 @@ namespace
 
 	void TestRgbChannelsAreProcessedIndependently()
 	{
-		const minicv::Image image = CreateImage(minicv::Size{ 3, 1 }, minicv::EImageType::UINT8_RGB,
-			std::array<std::uint8_t, 9>{ 10, 200, 30, 100, 20, 220, 50, 150, 60 });
+		const minicv::Image image = CreateImage(minicv::Size{ 3, 1 }, minicv::EImageType::UINT8_RGB, std::array<std::uint8_t, 9>{ 10, 200, 30, 100, 20, 220, 50, 150, 60 });
 		const minicv::StructuringElement element = minicv::CreateRectangularStructuringElement(minicv::Size{ 3, 1 });
 		const minicv::ImageBorderParameters borderParameters{ minicv::EBorderType::REPLICATE, 0 };
 		const minicv::Image erodedImage = minicv::CreateErodedImage(image, element, borderParameters);
@@ -111,32 +97,27 @@ namespace
 
 	void TestOpeningRemovesIsolatedBrightPixel()
 	{
-		const minicv::Image image = CreateImage(minicv::Size{ 9, 1 }, minicv::EImageType::UINT8_GRAYSCALE,
-			std::array<std::uint8_t, 9>{ 0, 255, 0, 0, 255, 255, 255, 0, 0 });
+		const minicv::Image image = CreateImage(minicv::Size{ 9, 1 }, minicv::EImageType::UINT8_GRAYSCALE, std::array<std::uint8_t, 9>{ 0, 255, 0, 0, 255, 255, 255, 0, 0 });
 		const minicv::StructuringElement element = minicv::CreateRectangularStructuringElement(minicv::Size{ 3, 1 });
 		const minicv::ImageBorderParameters borderParameters{ minicv::EBorderType::REPLICATE, 0 };
 
-		AssertPixelsEqual(minicv::CreateOpenedImage(image, element, borderParameters),
-			std::array<std::uint8_t, 9>{ 0, 0, 0, 0, 255, 255, 255, 0, 0 });
+		AssertPixelsEqual(minicv::CreateOpenedImage(image, element, borderParameters), std::array<std::uint8_t, 9>{ 0, 0, 0, 0, 255, 255, 255, 0, 0 });
 		AssertPixelsEqual(image, std::array<std::uint8_t, 9>{ 0, 255, 0, 0, 255, 255, 255, 0, 0 });
 	}
 
 	void TestClosingFillsNarrowDarkGap()
 	{
-		const minicv::Image image = CreateImage(minicv::Size{ 1, 9 }, minicv::EImageType::UINT8_GRAYSCALE,
-			std::array<std::uint8_t, 9>{ 0, 0, 255, 255, 0, 255, 255, 0, 0 });
+		const minicv::Image image = CreateImage(minicv::Size{ 1, 9 }, minicv::EImageType::UINT8_GRAYSCALE, std::array<std::uint8_t, 9>{ 0, 0, 255, 255, 0, 255, 255, 0, 0 });
 		const minicv::StructuringElement element = minicv::CreateRectangularStructuringElement(minicv::Size{ 1, 3 });
 		const minicv::ImageBorderParameters borderParameters{ minicv::EBorderType::REPLICATE, 0 };
 
-		AssertPixelsEqual(minicv::CreateClosedImage(image, element, borderParameters),
-			std::array<std::uint8_t, 9>{ 0, 0, 255, 255, 255, 255, 255, 0, 0 });
+		AssertPixelsEqual(minicv::CreateClosedImage(image, element, borderParameters), std::array<std::uint8_t, 9>{ 0, 0, 255, 255, 255, 255, 255, 0, 0 });
 		AssertPixelsEqual(image, std::array<std::uint8_t, 9>{ 0, 0, 255, 255, 0, 255, 255, 0, 0 });
 	}
 
 	void TestCompoundOperationsReuseConstantBorderForIntermediateImage()
 	{
-		const minicv::Image image = CreateImage(minicv::Size{ 1, 1 }, minicv::EImageType::UINT8_RGB,
-			std::array<std::uint8_t, 3>{ 90, 100, 110 });
+		const minicv::Image image = CreateImage(minicv::Size{ 1, 1 }, minicv::EImageType::UINT8_RGB, std::array<std::uint8_t, 3>{ 90, 100, 110 });
 		const minicv::StructuringElement element = minicv::CreateRectangularStructuringElement(minicv::Size{ 3, 3 });
 		const minicv::ImageBorderParameters lowBorder{ minicv::EBorderType::CONSTANT, 20 };
 		const minicv::ImageBorderParameters highBorder{ minicv::EBorderType::CONSTANT, 200 };
@@ -149,8 +130,7 @@ namespace
 
 	void TestSinglePositionMaskPreservesPixelsAndShape()
 	{
-		const minicv::Image image = CreateImage(minicv::Size{ 2, 1 }, minicv::EImageType::UINT8_RGB,
-			std::array<std::uint8_t, 6>{ 0, 128, 255, 200, 50, 90 });
+		const minicv::Image image = CreateImage(minicv::Size{ 2, 1 }, minicv::EImageType::UINT8_RGB, std::array<std::uint8_t, 6>{ 0, 128, 255, 200, 50, 90 });
 		const minicv::StructuringElement element = minicv::CreateCrossStructuringElement(minicv::Size{ 1, 1 });
 		const minicv::ImageBorderParameters borderParameters{ minicv::EBorderType::CONSTANT, 0 };
 		const std::array<minicv::Image, 4> processedImages{

@@ -225,10 +225,8 @@ namespace
 		{
 			std::ofstream outputStream(filePath, std::ios::binary);
 			const char pixelData[] = {
-				static_cast<char>(0),
-				static_cast<char>(127),
-				static_cast<char>(128),
-				static_cast<char>(255)
+				static_cast<char>(0), static_cast<char>(127),
+				static_cast<char>(128), static_cast<char>(255)
 			};
 
 			outputStream << "P5\r\n";
@@ -257,12 +255,8 @@ namespace
 		{
 			std::ofstream outputStream(filePath, std::ios::binary);
 			const char pixelData[] = {
-				static_cast<char>(255),
-				static_cast<char>(0),
-				static_cast<char>(0),
-				static_cast<char>(0),
-				static_cast<char>(255),
-				static_cast<char>(0)
+				static_cast<char>(255), static_cast<char>(0), static_cast<char>(0),
+				static_cast<char>(0), static_cast<char>(255), static_cast<char>(0)
 			};
 
 			outputStream << "P6\r\n";

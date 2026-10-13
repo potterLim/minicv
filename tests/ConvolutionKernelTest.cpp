@@ -43,8 +43,11 @@ namespace
 
 	void TestConvolutionKernelStoresSizeAndCoefficients()
 	{
-		const std::vector<double> coefficients{
-			1.0, 2.0, 3.0, 4.0, 5.0, 6.0, 7.0, 8.0, 9.0
+		const std::vector<double> coefficients
+		{
+			1.0, 2.0, 3.0,
+			4.0, 5.0, 6.0,
+			7.0, 8.0, 9.0
 		};
 		const minicv::ConvolutionKernel kernel(minicv::Size{ 3, 3 }, coefficients);
 
