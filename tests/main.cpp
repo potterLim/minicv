@@ -7,6 +7,7 @@
 #include "GrayscaleFilterResponseTest.h"
 #include "GrayscaleIntegralImageTest.h"
 #include "ImageFilteringTest.h"
+#include "ImageGeometryTest.h"
 #include "ImageIoTest.h"
 #include "ImageMorphologyTest.h"
 #include "ImageOperationsTest.h"
@@ -21,6 +22,7 @@ int main()
 	RunImageTests();
 	RunGrayscaleIntegralImageTests();
 	RunImageFilteringTests();
+	RunImageGeometryTests();
 	RunImageIoTests();
 	RunImageOperationsTests();
 	RunStructuringElementTests();

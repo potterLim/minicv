@@ -100,6 +100,8 @@ if(MINICV_BUILD_TESTS)
             tests/GrayscaleIntegralImageTest.h
             tests/ImageFilteringTest.cpp
             tests/ImageFilteringTest.h
+            tests/ImageGeometryTest.cpp
+            tests/ImageGeometryTest.h
             tests/ImageIoTest.cpp
             tests/ImageIoTest.h
             tests/ImageMorphologyTest.cpp
