@@ -10,18 +10,17 @@ namespace minicv
 	class StructuringElement
 	{
 	public:
-		/**
-		 * Requires positive, odd dimensions and width * height row-major mask values.
-		 * Zero excludes a position; nonzero includes it. At least one position must be active.
-		 * The anchor is fixed at (width / 2, height / 2).
-		 */
+		// Requires positive, odd dimensions and width * height row-major mask values.
+		// Zero excludes a position; nonzero includes it. At least one position must be active.
+		// The anchor is fixed at (width / 2, height / 2).
 		StructuringElement(const Size size, std::vector<std::uint8_t> maskValues);
 
 		StructuringElement(const StructuringElement& other) = default;
-		/** Copy assignment preserves the current value if allocation fails. */
+
+		// Copy assignment preserves the current value if allocation fails.
 		StructuringElement& operator=(const StructuringElement& other);
 
-		/** Move construction leaves a 1 x 1 identity; move assignment swaps valid values. */
+		// Move construction leaves a 1 x 1 identity; move assignment swaps valid values.
 		StructuringElement(StructuringElement&& other);
 		StructuringElement& operator=(StructuringElement&& other) noexcept;
 
@@ -29,7 +28,6 @@ namespace minicv
 		[[nodiscard]] int GetHeight() const;
 		[[nodiscard]] Size GetSize() const;
 
-		/** Requires coordinates inside the structuring element. */
 		[[nodiscard]] bool IsActive(const int x, const int y) const;
 
 	private:

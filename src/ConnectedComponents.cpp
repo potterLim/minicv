@@ -42,6 +42,7 @@ namespace minicv
 			int maximumX = seed.X;
 			int minimumY = seed.Y;
 			int maximumY = seed.Y;
+
 			// Floating-point accumulation avoids overflowing integer coordinate sums.
 			long double sumX = 0.0L;
 			long double sumY = 0.0L;

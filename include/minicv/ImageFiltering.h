@@ -20,6 +20,9 @@ namespace minicv
 	[[nodiscard]] Image CreateMedianFilteredImage(const Image& image, const Size kernelSize, const ImageBorderParameters borderParameters);
 	[[nodiscard]] Image CreateSharpenedImage(const Image& image, const ImageBorderParameters borderParameters);
 	[[nodiscard]] GrayscaleFilterResponse CreateLaplacianResponse(const Image& grayscaleImage, const ImageBorderParameters borderParameters);
+
+	// Requires finite responses; maps [-maximum absolute response, +maximum absolute response] to [0, 255], with zero rounding to 128.
+	// An all-zero response produces 128 throughout; empty input preserves its size.
 	[[nodiscard]] Image CreateSignedResponseImage(const GrayscaleFilterResponse& response);
 
 	[[nodiscard]] GrayscaleFilterResponse CreateSobelXResponse(const Image& grayscaleImage, const ImageBorderParameters borderParameters);
@@ -28,11 +31,12 @@ namespace minicv
 		const GrayscaleFilterResponse& sobelXResponse,
 		const GrayscaleFilterResponse& sobelYResponse);
 
-	/** Returns gradient directions as atan2(sobelY, sobelX) in radians within [-pi, pi]. Zero gradients map to 0 radians. */
+	// Directions use atan2(sobelY, sobelX), in radians within [-pi, pi].
+	// Zero gradients map to 0 radians.
 	[[nodiscard]] GrayscaleFilterResponse CreateGradientDirectionResponse(
 		const GrayscaleFilterResponse& sobelXResponse,
 		const GrayscaleFilterResponse& sobelYResponse);
 
-	/** Maps finite, non-negative gradient magnitudes from [0, maximum] to [0, 255]. */
+	// Maps finite, non-negative gradient magnitudes from [0, maximum] to [0, 255].
 	[[nodiscard]] Image CreateNormalizedGradientMagnitudeImage(const GrayscaleFilterResponse& gradientMagnitudeResponse);
 }

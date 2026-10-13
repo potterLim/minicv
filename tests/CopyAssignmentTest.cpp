@@ -139,7 +139,6 @@ namespace
 			AssertSame(destination, initialValue);
 			AssertSame(source, originalSource);
 
-			// A failed assignment must leave the destination reusable.
 			destination = source;
 			AssertSame(destination, source);
 			{

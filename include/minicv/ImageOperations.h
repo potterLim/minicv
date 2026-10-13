@@ -40,10 +40,15 @@ namespace minicv
 	[[nodiscard]] GrayscaleHistogram CalculateGrayscaleHistogram(const Image& grayscaleImage);
 	[[nodiscard]] GrayscaleCumulativeDistribution CalculateGrayscaleCumulativeDistribution(const GrayscaleHistogram& histogram);
 	[[nodiscard]] std::optional<GrayscaleValueRange> TryGetGrayscaleValueRange(const Image& grayscaleImage);
+
+	// Constant input produces zeros; empty input preserves its size.
 	[[nodiscard]] Image CreateMinMaxNormalizedGrayscaleImage(const Image& grayscaleImage);
 
 	[[nodiscard]] Image CreateContrastStretchedGrayscaleImage(const Image& grayscaleImage, const GrayscaleValueRange valueRange);
+
+	// Constant input preserves its pixel values; empty input preserves its size.
 	[[nodiscard]] Image CreateHistogramEqualizedGrayscaleImage(const Image& grayscaleImage);
+
 	[[nodiscard]] Image CreateThresholdedGrayscaleImage(const Image& grayscaleImage, const GrayscaleThresholdParameters thresholdParameters);
 
 	[[nodiscard]] std::optional<std::uint8_t> TryCalculateOtsuThreshold(const Image& grayscaleImage);

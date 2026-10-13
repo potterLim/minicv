@@ -299,8 +299,8 @@ namespace minicv::netpbm
 				return std::nullopt;
 			}
 
-			// Use header line endings, never raster contents or remaining file length.
-			// Without an earlier CRLF, CR is a single separator and a following LF is data.
+			// CRLF and a CR separator followed by an LF pixel are byte-identical.
+			// Earlier header line endings resolve this without depending on raster length.
 			if (usesCrLf && delimiter == '\r' && inputStream.peek() == '\n')
 			{
 				inputStream.get();

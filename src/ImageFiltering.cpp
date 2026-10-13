@@ -60,7 +60,8 @@ namespace minicv
 				std::vector<double>{ 0.0, 1.0, 0.0, 1.0, -4.0, 1.0, 0.0, 1.0, 0.0 });
 		}
 
-		// Coefficients use convolution order so intensity increases to the right or downward produce positive responses.
+		// These Sobel signs account for convolution's reversed kernel offsets.
+		// Intensity increases to the right or downward produce positive responses.
 		ConvolutionKernel CreateSobelXKernel()
 		{
 			return ConvolutionKernel(

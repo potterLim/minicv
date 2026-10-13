@@ -15,7 +15,7 @@ namespace minicv
 			std::filesystem::path::string_type extension = filePath.extension().native();
 			for (std::filesystem::path::value_type& character : extension)
 			{
-				// Supported extensions are ASCII; leave all other native characters unchanged.
+				// Native ASCII folding avoids lossy or failing conversions of Unicode extensions.
 				if (character >= 'A' && character <= 'Z')
 				{
 					character = static_cast<std::filesystem::path::value_type>(character + ('a' - 'A'));
