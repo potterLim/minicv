@@ -159,6 +159,22 @@ const std::vector<minicv::ConnectedComponent>& statistics = components.GetCompon
 배경만 있는 정상 크기의 이미지에서는 `IsEmpty()`가 false이고 영역 개수는 0입니다.
 RGB 입력, 지원하지 않는 연결성, 범위 밖 좌표는 Debug `assert`로 검사합니다.
 
+## 기본 기하 변환
+
+`ImageGeometry.h`는 최근접·양선형 크기 변경, 좌우·상하 반전, 시계·반시계 방향 90도 회전을 제공합니다. Grayscale과 RGB를 지원하며 결과는 입력을 수정하지 않고 자체 픽셀을 소유합니다.
+
+```cpp
+#include "minicv/ImageGeometry.h"
+
+const minicv::Image resizedImage = minicv::CreateResizedImage(sourceImage, minicv::Size{ 320, 240 }, minicv::EInterpolationType::BILINEAR);
+const minicv::Image flippedImage = minicv::CreateHorizontallyFlippedImage(resizedImage);
+const minicv::Image rotatedImage = minicv::CreateRotated90Image(flippedImage, minicv::ERotationDirection::CLOCKWISE);
+```
+
+최근접 보간은 원본 픽셀 값을 선택하고, 양선형 보간은 픽셀 중심을 기준으로 이웃 값을 보간합니다. 양선형 보간에서 원본 범위를 벗어난 좌표는 가장자리로 제한하고 결과는 반올림합니다.
+
+반전은 크기를 유지하고 90도 회전은 너비와 높이를 바꿉니다. 크기 변경의 목표 너비나 높이가 0이면 요청한 크기의 빈 영상을 반환하며, 비어 있지 않은 결과를 만들려면 원본도 비어 있지 않아야 합니다.
+
 ## 빌드 설정
 
 제공된 CMake preset은 `Ninja Multi-Config` generator를 사용하며, 다음 설정을 기본으로 합니다.

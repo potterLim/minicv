@@ -15,6 +15,7 @@ add_library(miniCV STATIC
     src/ImageBorder.cpp
     src/ImageBorder.h
     src/ImageFiltering.cpp
+    src/ImageGeometry.cpp
     src/ImageIo.cpp
     src/ImageMorphology.cpp
     src/ImageOperations.cpp
@@ -32,12 +33,15 @@ add_library(miniCV STATIC
     include/minicv/Image.h
     include/minicv/ImageBorderParameters.h
     include/minicv/ImageFiltering.h
+    include/minicv/ImageGeometry.h
     include/minicv/ImageIo.h
     include/minicv/ImageMorphology.h
     include/minicv/ImageOperations.h
     include/minicv/EBorderType.h
     include/minicv/EImageType.h
+    include/minicv/EInterpolationType.h
     include/minicv/ERgbChannel.h
+    include/minicv/ERotationDirection.h
     include/minicv/EThresholdType.h
     include/minicv/GrayscaleAdaptiveThresholdParameters.h
     include/minicv/GrayscaleCumulativeDistribution.h
