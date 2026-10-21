@@ -110,6 +110,8 @@ if(MINICV_BUILD_TESTS)
             tests/ImageOperationsTest.h
             tests/ImageTest.cpp
             tests/ImageTest.h
+            tests/ObjectCandidateDetectionTest.cpp
+            tests/ObjectCandidateDetectionTest.h
             tests/StructuringElementTest.cpp
             tests/StructuringElementTest.h
         )

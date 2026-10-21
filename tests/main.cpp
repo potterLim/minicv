@@ -12,6 +12,7 @@
 #include "ImageMorphologyTest.h"
 #include "ImageOperationsTest.h"
 #include "ImageTest.h"
+#include "ObjectCandidateDetectionTest.h"
 #include "StructuringElementTest.h"
 
 int main()
@@ -27,6 +28,7 @@ int main()
 	RunImageOperationsTests();
 	RunStructuringElementTests();
 	RunImageMorphologyTests();
+	RunObjectCandidateDetectionTests();
 
 	return 0;
 }
