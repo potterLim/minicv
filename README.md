@@ -55,6 +55,9 @@ cmake --build --preset macos-debug --target minicv_threshold_and_convolution_exa
 
 cmake --build --preset macos-debug --target minicv_filtering_and_sobel_example
 ./out/build/macos/Debug/minicv_filtering_and_sobel_example
+
+cmake --build --preset macos-debug --target minicv_object_candidate_detection_example
+./out/build/macos/Debug/minicv_object_candidate_detection_example
 ```
 
 Windows MSVC:
@@ -74,6 +77,9 @@ cmake --build --preset windows-msvc-debug --target minicv_threshold_and_convolut
 
 cmake --build --preset windows-msvc-debug --target minicv_filtering_and_sobel_example
 .\out\build\windows-msvc\Debug\minicv_filtering_and_sobel_example.exe
+
+cmake --build --preset windows-msvc-debug --target minicv_object_candidate_detection_example
+.\out\build\windows-msvc\Debug\minicv_object_candidate_detection_example.exe
 ```
 
 ### 필터링과 Sobel 비교 예제
@@ -100,6 +106,24 @@ constant(0)와 replicate 경계 처리 결과를 비교합니다. 박스/가우�
 Signed response 영상은 0을 회색(128), 음수를 어둡게, 양수를 밝게 표시합니다.
 각 영상은 자체 최댓값(부호가 있는 응답은 절댓값의 최댓값)으로 정규화하므로,
 서로 다른 영상의 밝기를 원래 응답 크기의 절대 비교에 사용하지 않습니다.
+
+### 객체 후보 검출 예제
+
+`ObjectCandidateDetectionExample`은 밝은 사각형과 점 잡음이 있는 grayscale 이미지에 임계값 처리 → 열기 → 닫기 → 연결 영역 분석을 적용합니다. 임계값 100을 초과하는 픽셀을 전경으로 선택하고, 3×3 사각형 구조 요소와 replicate 경계 처리로 고립된 밝은 잡음을 제거한 뒤 작은 구멍을 채웁니다.
+
+8방향 연결 영역 중 면적이 20픽셀 이상인 영역을 후보로 선택합니다. 예제 입력에서는 면적 81·63픽셀의 두 영역이 선택되고, 면적 9픽셀의 작은 영역은 제외됩니다. 후보의 라벨·면적·경계 박스·중심점을 출력하며, 기대 통계와 다르거나 후보 마스크가 예상 영역과 픽셀 단위로 일치하지 않으면 실행에 실패합니다.
+
+결과는 시스템 임시 디렉터리의 `minicv_object_candidate_detection_example`에 저장됩니다. 실행 시 실제 경로를 출력하고, 저장한 PGM 파일을 다시 읽어 원본 픽셀과 일치하는지 확인합니다.
+
+| 파일 | 확인할 내용 |
+| --- | --- |
+| `source.pgm` | 크기가 다른 사각형과 밝고 어두운 점 잡음 |
+| `binary.pgm` | 임계값 처리 결과 |
+| `opened.pgm` | 고립된 밝은 잡음 제거 결과 |
+| `cleaned.pgm` | 작은 구멍을 채운 연결 영역 분석 입력 |
+| `candidates.pgm` | 면적 조건을 만족하는 영역의 이진 마스크 |
+
+구조 요소 크기와 면적 기준은 이 합성 입력에 맞춘 예제 설정입니다. 실제 영상에서는 작은 물체도 열기로 제거될 수 있고, 가까운 영역은 닫기로 합쳐질 수 있으므로 대상의 크기와 간격에 맞춰 조정해야 합니다.
 
 ## 이미지 입출력 범위
 

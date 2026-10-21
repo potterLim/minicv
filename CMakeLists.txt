@@ -163,6 +163,10 @@ if(MINICV_BUILD_EXAMPLES)
         examples/FilteringAndSobelExample.cpp
     )
 
+    add_executable(minicv_object_candidate_detection_example
+        examples/ObjectCandidateDetectionExample.cpp
+    )
+
     target_link_libraries(minicv_image_difference_example
         PRIVATE
             miniCV::miniCV
@@ -188,9 +192,15 @@ if(MINICV_BUILD_EXAMPLES)
             miniCV::miniCV
     )
 
+    target_link_libraries(minicv_object_candidate_detection_example
+        PRIVATE
+            miniCV::miniCV
+    )
+
     minicv_enable_warnings(minicv_image_difference_example)
     minicv_enable_warnings(minicv_histogram_example)
     minicv_enable_warnings(minicv_image_io_round_trip_example)
     minicv_enable_warnings(minicv_threshold_and_convolution_example)
     minicv_enable_warnings(minicv_filtering_and_sobel_example)
+    minicv_enable_warnings(minicv_object_candidate_detection_example)
 endif()
